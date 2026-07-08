@@ -1,0 +1,398 @@
+---
+title: "Estimacion de los cuantiles"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+El objetivo de esta guia es comparar empiricamente la performance de diferentes estimadores. Para esto propondremos dos estimadores para el percentil 0.90: 
+el primero de ellos, no asume modelo alguno para la distribucion que genera los datos mientras que el segundo depende fuertemente del modelo asumido para dicha distribucion. 
+La idea es explorar el comportamiento de los estimadores en diferentes escenarios.
+
+Generaremos datos asumiendo que provienen de una familia exponencia E(λ): X ∼ E(λ)
+
+donde IA(x) es la funcion indicadora de conjunto A. 
+
+
+
+#### 1. 
+Calcular E(X), V(X) como funcion de λ.
+
+```{r }
+lambdas = seq(from = 0.1, to = 10, length.out = 100) 
+lambdas_estimados <- c()
+for (lamb in lambdas){
+  
+  # print(lamb)
+  nrep <- 1000
+  promedios<- rep(NA,nrep)
+  n=40
+  for (i in 1:nrep){
+    promedios[i] <- mean(rexp(n,lamb))
+  }
+  # print(mean(promedios))
+  # hist(promedios,probability = TRUE,breaks = 50)
+  lambdas_estimados <- c(lambdas_estimados,mean(promedios))
+
+}
+# lambdas_estimados
+lambdas_teoricos <-  1/lambdas
+df <- data.frame(lambdas,lambdas_estimados,lambdas_teoricos)
+
+library(ggplot2)
+
+ggplot(df, aes(lambdas)) + # basic graphical object
+geom_point(aes(y= lambdas_teoricos), colour="green",shape=15) + # first layer
+geom_point(aes(y= lambdas_estimados), colour="red")+ # second layer
+scale_color_manual(values = c("Women" ="blue",'Men' = '#3399ff')) +
+scale_shape_manual(values = c('Women' = 17, 'Men' = 16))
+```
+
+
+```{r }
+lambdas = seq(from = 0.1, to = 10, length.out = 2) 
+lambdas_estimados_var <- c()
+for (lamb in lambdas){
+  
+  # print(lamb)
+  nrep <- 1000
+  promediosvar<- rep(NA,nrep)
+  n=4
+  for (i in 1:nrep){
+    promediosvar[i] <- var(rexp(n,lamb))
+    print(promediosvar[i])
+  }
+  # print(mean(promedios))
+  # hist(promediosvar,probability = TRUE,breaks = 50)
+  lambdas_estimados_var <- c(lambdas_estimados_var,mean(promediosvar))
+  print(mean(promediosvar))
+}
+
+# lambdas_teoricos <-  1/lambdas
+df <- data.frame(lambdas,lambdas_estimados_var,lambdas_estimados_var)
+ggplot(df, aes(lambdas)) + # basic graphical object
+geom_point(aes(y= lambdas_estimados_var), colour="green",shape=15) + # first layer
+geom_point(aes(y= lambdas_estimados_var), colour="red")+ # second layer
+scale_color_manual(values = c("Women" ="blue",'Men' = '#3399ff')) +
+scale_shape_manual(values = c('Women' = 17, 'Men' = 16))
+```
+
+
+```{r }
+# Number of simulations.
+nosim <- 1000
+
+# Set the seed to assure reproducibility.
+set.seed(885)
+# Create matrix 1000 X 10 with random values from exponential distribution lambda.
+mSimulation10 <- matrix(rexp(nosim * 10, lambda), nosim)
+```
+
+##2
+3. De aquı en mas consideraremos λ = 1/10.
+4. Indicar con que instrucciones puede calcular este valor con R.¿Que valor toma?
+```{r }
+nrep <- 1000
+muchas <- rexp(nrep,1/10)
+# Este valor se puede calcular estimando la media de la muestra y 
+# luego realizando la inversa
+
+#Calcular E(X)
+esperanza<-1/lambda
+
+#Calcular V(X)
+varianza<-1/lambda^2
+
+#Formula para estimar el parametro de interes
+#P(X<=Q0.9)=0.9
+formula_q<-function(lambda){
+  (-log(1-0.9))/lambda
+}
+
+
+```
+
+5. ¿Depende esta cantidad de los datos?
+```{r }
+# cuanto mayor sean la cantidad de datos mejor sera la estimacion de la media 
+# y asi mejor calculado el lambda
+
+```
+
+Primer estimador: qb0.9
+Consideremos el estimador qb0.9 basado en el comando quantile de R.
+
+6. Fijar una semilla
+7. Guardar en el vector muchas exponenciales, Nrep = 1000 datos con distribuci´on
+E(λ) siendo λ = 1/10, utilizando el comando rexp()
+
+
+```{r }
+set.seed(1)  # 6. fijar semilla
+
+#Generar 1000 datos exponenciales
+nrep<-1000
+lambda<-0.1
+muchas_exponenciales<-rexp(nrep,lambda)
+```
+
+8. Guardar en el vector muchos cuantiles exponenciales el cuantil muestral de las
+primeras n observaciones del vector muchas exponenciales, con n = 1, . . . , Nrep.
+
+```{r }
+#Calcular el cuantil 0.9 de las n obs
+muchos_cuantiles_exponenciales<-rep(NA,nrep)
+
+for (i in 1:nrep){
+  muchos_cuantiles_exponenciales[i]<-quantile(muchas_exponenciales[1:i],probs = 0.9)
+}
+```
+
+9. Graficar n (en el eje x) versus el cuantil muestral de los primeros n datos. Utilizar
+ylim=c(0,35).
+
+```{r }
+
+plot(1:nrep,muchos_cuantiles_exponenciales,ylim = c(0,35))
+
+```
+
+10. Repetir los ´ıtems 7 a 9 Ngen = 10 veces, agregando al gr´afico anterior los cuantiles de cada individuo en un color diferente.
+
+```{r }
+
+muchas_exp<- rexp(nrep,lambda)
+nrep <- 1000
+muchas_cuantiles_exp<- rep(NA,nrep)
+for (i in 1:nrep){
+  muchas_cuantiles_exp[i] <- quantile(x=muchas_exp[1:i] ,probs=0.9 ) 
+}
+g = plot(1:nrep,muchas_cuantiles_exp,ylim = c(20,30),cex = 0.3)
+
+ngen= 20
+for (j in 1:ngen){
+  muchas_exp<- rexp(nrep,lambda)
+  nrep <- 1000
+  muchas_cuantiles_exp<- rep(NA,nrep)
+  for (i in 1:nrep){
+    muchas_cuantiles_exp[i] <- quantile(x=muchas_exp[1:i] ,probs=0.9 ) 
+  }
+  
+  g+points(1:nrep,muchas_cuantiles_exp,ylim = c(0,1),col=j,cex = 0.3)
+  
+}
+```
+
+11. Indicar cual espera que sea el valor l´ımite de estas sucesiones. ¿Condice con lo que
+muestra el grafico?
+
+```{r }
+
+```
+
+12. Realizar histogramas basados en Ngen = 100 replicaciones, considerando muestras de
+tama˜no n = 5, n = 30, n = 100. Comente las principales caracter´ısticas que observa
+en los gr´aficos ¿Dir´ıa que la distribuci´on de qb0.9 es aproximadamente normal cuando n
+es grande?
+
+```{r }
+
+enes <- c(5,30,100)
+for (n in enes){
+  
+# n=5
+Ngen <- 1000
+distrib_histo_q <- rep(NA, Ngen)
+for (i in 1:Ngen){
+  mis_exponenciales <- rexp(n,lambda)
+  distrib_histo_q[i]<- quantile(mis_exponenciales, 0.9)
+}
+
+p1 <-hist(distrib_histo_q, probability=TRUE,breaks = 50,col= n,main=n)
+# plot(p1, col=n, main=n)
+}
+
+```
+
+####################################### Segundo Estimador Qrulo
+
+13. Fijar la misma semilla que en el primer ´ıtem del ejercicio anterior.
+```{r }
+set.seed(1)  # fijar semilla
+```
+
+14. Guardar en el vector muchas exponenciales, Nrep = 1000 datos con distribuci´on
+E(λ) siendo λ = 1/10, utilizando el comando rexp().
+
+```{r }
+#Generar 1000 datos exponenciales
+nrep<-1000
+lambda<-0.1
+muchas_exponenciales<-rexp(nrep,lambda)
+```
+
+15. Guardar en el vector muchos cuantiles rulo exponenciales el estimador qe0.9 de las
+primeras n observaciones del vector muchas exponenciales, con n = 1, . . . , Nrep.
+
+```{r }
+#Calcular el cuantil 0.9 de las n obs
+muchos_cuantiles_rulo_exponenciales<-rep(NA,nrep)
+
+for (i in 1:nrep){
+  lambdaestim <- 1/mean(muchas_exponenciales[1:i])
+  muchos_cuantiles_rulo_exponenciales[i]<-qexp(0.9,lambdaestim)
+}
+```
+
+16. Graficar n (en el eje x) versus el estimador del cuantil calculado en el ´ıtem anterior
+con los primeros n datos. Utilizar ylim=c(0,35).
+
+```{r }
+
+plot(1:i,muchos_cuantiles_rulo_exponenciales,ylim = c(0,35), ylab="muchos_cuantiles_rulo_exponenciales")
+```
+
+
+17. Repetir los ıtems 14 a 16 Ngen = 10 veces, agregando al gr´afico anterior los cuantiles
+estimados con el estimador qe0.9 de cada individuo en un color diferente.
+
+```{r }
+
+nrep<-1000
+lambda<-0.1
+muchas_exponenciales<-rexp(nrep,lambda)
+muchos_cuantiles_rulo_exponenciales<-rep(NA,nrep)
+
+for (i in 1:nrep){
+  lambdaestim <- 1/mean(muchas_exponenciales[1:i])
+  muchos_cuantiles_rulo_exponenciales[i]<-qexp(0.9,lambdaestim)
+}
+g = plot(1:i,muchos_cuantiles_rulo_exponenciales,ylim = c(0,35), ylab="muchos_cuantiles_rulo_exponenciales")
+
+ngen= 10
+for (j in 1:ngen){
+  muchas_exponenciales<- rexp(nrep,lambda)
+  nrep <- 1000
+  muchos_cuantiles_rulo_exponenciales<- rep(NA,nrep)
+  for (i in 1:nrep){
+    lambdaestim <- 1/mean(muchas_exponenciales[1:i])
+    muchos_cuantiles_rulo_exponenciales[i]<-qexp(0.9,lambdaestim)
+  }
+
+  g+points(1:nrep,muchos_cuantiles_rulo_exponenciales,ylim = c(0,1),col=j,cex = 0.3)
+
+}
+
+```
+
+
+18. Indicar cu´al espera que sea el valor l´ımite de estas sucesiones. ¿Condice con lo que
+muestra el gr´afico?
+
+```{r }
+
+```
+19. Realizar histogramas basados en Ngen = 100 replicaciones, considerando muestras de
+tama˜no n = 5, n = 30, n = 100. Comente las principales caracter´ısticas que observa
+en los gr´aficos ¿Dir´ıa que la distribuci´on de qe0.9 es aproximadamente normal cuando n
+es grande?
+
+```{r }
+enes <- c(5,30,100)
+for (n in enes){
+Ngen <- 1000
+distrib_histo_qrul <- rep(NA, Ngen)
+for (i in 1:Ngen){
+  mis_exponenciales <- rexp(n,lambda)
+  lambdaestim <- 1/mean(mis_exponenciales)
+  distrib_histo_qrul[i]<- qexp(0.9,lambdaestim)
+}
+
+p1 <-hist(distrib_histo_qrul, probability=TRUE,breaks = 50,col= n,main=n)
+
+}
+
+```
+
+#
+Error Cuadr´atico Medio
+Recordemos que si θ es un par´ametro de inter´es, el error cuadr´atico medio de un estimador
+θbn = θbn(X1, . . . , Xn) est´a dado por
+  ECM = E{(θbn − θ)2}. 
+
+Para obtener el ECM necesitamos conocer la distribucion de θbn. Sin embargo, cuando simulamos y generamos datos, podemos estimar el ECM con su versi´on emp´ırica,(ECME)
+
+20. Representar en una tabla el error cuadratico medio emp´ırico, ECME, de los estimadores qb0.9 y qe0.9 para muestras de tama˜no n=50, n=150, n=200 y n=500, utilizando Nrep=1000 replicaciones en cada caso.
+¿Qu´e estimador prefiere bajo este escenario?
+
+
+```{r }
+
+enes <- c(50,150,200,500)
+qsombecm <- c()
+
+for (n in enes){
+  
+# Qsomb
+lambda <- 0.1
+Nrep<-1000  
+realidad = qexp(0.9,lambda)
+
+quantiles_qsomb <-rep(NA, Nrep)
+dif_qsomb_realid <-rep(NA, Nrep)
+
+for (i in 1:Nrep){
+  mis_exponenciales<-rexp(n,lambda)   #Genero exponenciales
+  quantiles_qsomb[i]<-quantile(mis_exponenciales, 0.9) # Para cada replica calculo quantile
+
+  # Calculo diferencia entre qsomb y la realidad  
+  dif_qsomb_realid[i]<-((quantiles_qsomb[i]-realidad)^2) #Calculo dif estimacion qsomb y la realidad 
+}
+# vector <- c(vector, v)
+qsombecm <- c(qsombecm, sum(dif_qsomb_realid)/Nrep )
+print(sum(dif_qsomb_realid)/Nrep)
+}
+
+# Qrulo
+
+qruloecm <- c()
+
+for (n in enes){
+  
+# Qsomb
+lambda <- 0.1
+Nrep<-1000  
+realidad = qexp(0.9,lambda)
+
+quantiles_qrulo <-rep(NA, Nrep)
+dif_qrulo_realid <-rep(NA, Nrep)
+
+for (i in 1:Nrep){
+  mis_exponenciales<-rexp(n,lambda)   #Genero exponenciales
+  lambdaestim <- 1/mean(mis_exponenciales) # ESTIMO LAMBDA
+  quantiles_qrulo[i]<- qexp(0.9,lambdaestim) # Para cada replica calculo quantile
+
+  # Calculo diferencia entre qsomb y la realidad  
+  dif_qrulo_realid[i]<-((quantiles_qrulo[i]-realidad)^2) #Calculo dif estimacion qsomb y la realidad 
+}
+qruloecm <- c(qruloecm, sum(dif_qrulo_realid)/Nrep)
+print(sum(dif_qrulo_realid)/Nrep)
+}
+
+df <- data.frame(enes,qsombecm,qruloecm)
+colnames(df) <- c('N','ECM qsomb','ECM qrulo')
+df
+
+```
+
+
+
+
+
+
+

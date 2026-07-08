@@ -1,0 +1,336 @@
+---
+title: "Estimacion no parametrica de la densidad"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ejercicio de clase sobre la empirica
+
+```{r , echo=TRUE}
+datos <- c(0.57, 0.93, 0.81, 0.44,0.36, 0.52,0.65,0.69,0.82,0.12) #los datos son de una uniforme
+# datos <- runif(100)
+# Empirica devuelve la proba de datos < t
+empirica <- function(datos,t){
+  mean(datos<=t)
+  }
+
+ejex <- seq(0,1,0.01)
+ejey <- c()
+# Recorro cada x y calculo el y
+for(i in ejex){
+  ejey<- c(ejey,empirica(datos,i))
+}
+
+plot(ejex,ejey,cex=0.5)
+```
+
+
+#### Probando ecdf
+
+```{r , echo=TRUE}
+# ecdf: Empirical Cumulative Distribution Function
+plot(ecdf(datos))
+```
+
+
+## Parte 1: Estimacion
+
+#### 1
+Los datos que se muestran a continuaci´on se hallan en el archivo buffalo.txt y corresponden
+a la mediciones de cantidad de nieve ca´ıda (en pulgadas) en Buffalo en los inviernos de
+1910/1911 a 1972/1973.
+
+Realice un histograma para estos datos utilizando los par´ametros por default. 
+Repetir eligiendo como puntos de corte las siguientes secuencias: 
+i) de 20 a 140 con paso 10
+ii) de 20 a 140 con paso 5. 
+Comparar los tres histogramas obtenidos. ¿Tiene algun efecto el refinamiento de los bins?
+```{r , echo=TRUE}
+# datos = scan(nlines = 4)
+# 126.4 82.4 78.1 51.1 90.9 76.2 104.5 87.4 110.5 25.0 69.3 53.5 39.8 63.6 46.7 72.9 79.6 83.6 80.7 
+# 60.3 79.0 74.4 49.6 54.7 71.8 49.1 103.9 51.6 82.4 83.6 77.8 79.3 89.6 85.5 58.0 120.7 110.5 65.4 
+# 39.9 40.1 88.7 71.4 83.0 55.9 89.9 84.8 105.2 113.7 124.7 114.5 115.6 102.4 101.4 89.8 71.5 70.9 98.3 55.5 66.1 78.4 120.5 97.0 110.0
+
+datos = c(
+126.4, 82.4, 78.1, 51.1, 90.9, 76.2, 104.5, 87.4, 110.5, 25.0, 69.3, 53.5, 39.8, 63.6, 46.7, 72.9, 79.6, 83.6, 80.7,60.3, 79.0, 74.4, 49.6, 54.7, 71.8, 49.1, 103.9, 51.6, 82.4, 83.6, 77.8, 79.3, 89.6, 85.5, 58.0, 120.7, 110.5, 65.4, 39.9, 40.1, 88.7, 71.4, 83.0, 55.9, 89.9, 84.8, 105.2, 113.7, 124.7, 114.5, 115.6, 102.4, 101.4, 89.8, 71.5, 70.9, 98.3, 55.5, 66.1, 78.4, 120.5, 97.0, 110.0)
+
+par(mfrow=c(2,2))
+hist(datos)
+# i) de 20 a 140 con paso 10
+hist(datos, breaks = c(10),xlim = c(20,140))
+# ii) de 20 a 140 con paso 5. 
+hist(datos, breaks = c(5),xlim = c(20,140))
+# Comparar los tres histogramas obtenidos. Â¿Tiene algun efecto el refinamiento de los bins?
+```
+
+#### 2. 
+Realice un histograma para estas observaciones utilizando puntos de corte (10, 20, 30,
+40, 50, 60, 70, 80, 90, 100, 110, 120, 130). Repita corriendo el punto de inicio de
+los bins en 2 unidades 2 veces consecutivas. Compare los tres histogramas obtenidos.
+¿Tiene alg´un efecto la elecci´on del punto inicial en este ejemplo?
+
+
+```{r , echo=TRUE}
+par(mfrow=c(2,2))
+puntos_corte <- seq(10,130,10)
+hist(datos, breaks = puntos_corte, freq = FALSE)
+
+puntos_corte <- puntos_corte +2
+hist(datos, breaks = puntos_corte, freq = FALSE)
+
+puntos_corte <- puntos_corte +2
+hist(datos, breaks = puntos_corte, freq = FALSE)
+# Alerta a que es sensible el histograma? yo me quiero acercar a la densidad
+# No quiero poner muy chiquitos
+# El histograma parte y hace el mismo corte para todos los puntos
+```
+
+#### 3 
+. Sea X la cantidad de nieve ca´ıda en un invierno en Buffalo. Implemente una funci´on,
+probab.est(x,dat,h), que permita estimar a
+P( X ∈ [x − h, x + h]) = P (x − h ≤ X ≤ x + h)
+
+para cada valor x a partir de la cantidad de observaciones entre los datos disponibles
+dat = (x1, . . . , xn) que est´an a distancia menor o igual que h de x, siendo h el tama˜no
+de ventana elegida.
+
+Utilizando dicha funcion estime la probabilidad deseada para los valores x = 40 y
+h = 10. Compare con la estimacion obtenida si cambia a h = 20.
+
+```{r , echo=TRUE}
+# 3 probab.est(x,dat,h)
+probab.est <- function(x,datos,h){
+  valor<- sum(datos>=(x-h) & datos <=(x+h))
+  valor/(2*h*length(datos))
+}
+probab.est(40,datos,10) #0.04761
+probab.est(40,datos,20) # 0.0055
+```
+
+#### 4 
+Calcule la estimacion de la probabilidad definida en el ıtem anterior para cada valor x
+de la grilla de datos observados dat = (x1, . . . , xn), usando h = 10, 20 y 30. Compare.
+
+```{r , echo=TRUE}
+# 4 grilla_valores
+grilla_valores <- function(datos,h){
+    valores <- c()
+    for (i in datos){
+    valores <- c(valores,probab.est(i,datos,h)) }
+    valores
+}
+par(mfrow=c(2,2))
+plot(datos,grilla_valores(datos,10),ylab ="Ventana 10")
+plot(datos,grilla_valores(datos,20),ylab ="Ventana 20")
+plot(datos,grilla_valores(datos,30),ylab ="Ventana 30")
+```
+
+
+#### 5 
+Implemente una funcion densidad.est.parzen que tenga por argumento un conjunto
+de datos dat = (x1, . . . , xn), una ventana h y un punto x y devuelva fbh(x), el valor de
+la estimacion de la densidad f en el punto x, utilizando el n´ucleo uniforme (tambi´en
+llamado rectangular).
+```{r , echo=TRUE}
+# 5 densidad.est.parzen
+densidad.est.parzen <- function(x,datos,h){
+  datos <- (datos- x)/h
+  valor<- sum(datos>=(-1) & datos <=(1))
+  valor*1/2/(h*length(datos))
+  
+}
+densidad.est.parzen(40,datos,10)
+```
+
+#### 6
+
+Con la funcion densidad.est.parzen implementada, estime la densidad f en el intervalo (25,126.4) (mınimo y m´aximo de las observaciones) sobre una grilla de 200 puntos
+equiespaciados para h = 10. Grafique el estimador fbh(x) obtenido.
+
+```{r , echo=TRUE}
+grilla_valores_parzen <- function(valoresx,datos,h){
+    # valoresx <- seq(25,126.4,length.out = 200)
+    valores <- c()
+    for (i in valoresx){
+    valores <- c(valores,densidad.est.parzen(i,datos,h)) }
+    valores
+}
+
+valoresx <- seq(25,126.4,length.out = 200)
+plot(valoresx,grilla_valores_parzen(valoresx,datos,10))
+```
+
+
+#### 7
+Estime la funcion de densidad f de la variable pulgadas de nieve caıda en invierno
+a partir de los datos de Buffalo a trav´es de la funci´on densidad.est.parzen implementada en el item anterior usando h = 10. Realice un histograma para los datos de Buffalo y superponga la densidad estimada en los datos mediante la funcion densidad.est.parzen utilizando h = 10, 20 y 30. Observe como varıa la rugosidad de los estimadores de f obtenidos.
+
+```{r , echo=TRUE}
+par(mfrow=c(2,2))
+plot(valoresx,grilla_valores_parzen(valoresx,datos,10),ylab ="Ventana 10" )
+plot(valoresx,grilla_valores_parzen(valoresx,datos,20),ylab ="Ventana 20")
+plot(valoresx,grilla_valores_parzen(valoresx,datos,30),ylab ="Ventana 30")
+```
+
+#### 8
+La funcion de R density computa un estimador de la densidad a partir de un conjunto
+de datos x = (x1, . . . , xn) y la evalua en un conjunto de puntos intermedios. 
+Mediante la funcion de R density estime la funcion de densidad f de la variable pulgadas de
+nieve caıda en invierno a partir de los datos de Buffalo y utilizando el nucleo normal,
+el rectangular y el de Epanechnikov con ventana h = 5. 
+Realice un gr´afico en el que superpone las tres estimaciones de f y compare los resultados.
+
+```{r , echo=TRUE}
+pp.rec = density(datos,kernel = 'rectangular',window = 5)
+pp.gau = density(datos,kernel = 'gaussian',window = 5)
+pp.epa = density(datos,kernel = 'epanechnikov',window = 5)
+
+
+plot(pp.rec)
+lines(pp.rec$x,pp.rec$y,type = "l",col="black",lwd=2)
+lines(pp.gau$x,pp.gau$y,type = "l",col="red",lwd=2)
+lines(pp.epa$x,pp.epa$y,type = "l",col="blue",lwd=2)
+
+```
+
+# Dia 2 
+
+Repaso y Jugamos con:
+https://glmconr2.shinyapps.io/app_regre2/
+
+con histograma:NO
+con densidad:SI
+con real:NO
+cambiando las ventanas a 0,25-1-4 
+Vecindad Si
+Nucleo gaussiano
+
+con h=0,25 hay mucho ruido, con h1 hay menos ruido y 
+se suele observar un pico unico, con h4 casi no hay ruido pero pierdo mi ibjeto de interes, ya estoy 
+sesgado.
+--> La eleccion del H es importante para:
+    el sesgo y la varianza.
+    YO quiero poco sesgo y varianza. Mi optimo seria encontrar una ventana que refleje lo que dicen mis datos y que haya poca varianza entre nuestros histogramas.
+    Veremos que el n y el h se cruzan en algun punto...
+    
+----Una ventana h peque ̃na dar ́a un estimador muy rugoso, con muchos picos y dif ́ıcil de interpretar
+----una ventana h grande sobresuaviza al estimador de la densidad y enmascara estructuras de los datos.    
+    
+Sesgo depende del h y de la curvatura de la funcion 
+Varianza 
+    
+    
+    
+#### 9. 
+Para los datos de Buffalo halle la ventana  optima hS por la regla de Silverman para el
+nucleo normal, calcule la estimacion de f basada en el nucleo normal con dicha ventana y
+grafique la estimacion de la densidad obtenida.
+```{r , echo=TRUE}
+datos = c(126.4, 82.4, 78.1, 51.1, 90.9, 76.2, 104.5, 87.4, 110.5, 25.0, 69.3, 53.5, 39.8, 63.6, 46.7, 72.9, 79.6, 83.6, 80.7,60.3, 79.0, 74.4, 49.6, 54.7, 71.8, 49.1, 103.9, 51.6, 82.4, 83.6, 77.8, 79.3, 89.6, 85.5, 58.0, 120.7, 110.5, 65.4, 39.9, 40.1, 88.7, 71.4, 83.0, 55.9, 89.9, 84.8, 105.2, 113.7, 124.7, 114.5, 115.6, 102.4, 101.4, 89.8, 71.5, 70.9, 98.3, 55.5, 66.1, 78.4, 120.5, 97.0, 110.0)
+
+hsil = min((sd(datos)),(IQR(datos)/1.349))
+hsil = hsil*1.06*(length(datos)**-1/5)
+# hsil #0.0798
+
+pp.gau = density(datos,kernel = 'gaussian',window = hsil)
+plot(pp.gau)
+lines(pp.gau$x,pp.gau$y,type = "l",col="black",lwd=2)
+```    
+
+
+#### 10. 
+Se puede realizar la estimacion de la densidad f a partir de un conjunto de datos a
+traves de la funcion density en un punto deseado x (f.hat.x) de la siguiente forma:
+f.hat.x<- density(datos, from=x, to=x, n=1)
+
+Tambien mediante la funcion approxfun de R se puede aproximar la densidad esti-
+mada por la funcion de R density en el punto deseado x a partir de un conjunto de
+datos de la siguiente manera:
+
+df <- approxfun(density(datos))
+f.hat.x<-df(x)
+
+Calcule la estimacion de la densidad usando density a partir de los datos de Buffalo
+usando la ventana de Silverman y con esta estimacion obtenga estimaciones de la
+densidad en los valores observados de nieve caıda en Buffalo. 
+
+Grafique la densidad estimada y superponga en el mismo plot los puntos correspondientes a las observaciones y el valor estimado de la densidad correspondiente en rojo.
+```{r , echo=TRUE}
+vector <- c()
+for (i in datos){
+# approxfun(density(datos))
+vector <- c(vector,approxfun(density(datos,kernel = 'gaussian',window = hsil))(i))
+}
+
+plot(datos,vector,col="red")
+lines(pp.gau$x,pp.gau$y,type = "l",col="black",lwd=2)
+
+```    
+    
+#### 11. 
+Llamemos fsombh(−i) a la densidad estimada sin utilizar al punto xi y usando la ventana h.
+Calcule las estimaciones fsombh(−i) para i = 17,20,51 de la densidad f usando la funcion
+density a partir de los datos de Buffalo usando el nucleo de Epanechnikov y la ventana
+h = 5. 
+Grafique en un mismo plot la estimacion de f basada en todos los datos
+usando el nucleo de Epanechnikov y la ventana h = 5 y las estimaciones  fsombh(−i)
+h para i = 17, 20, 51. Compare las estimaciones obtenidas.
+```{r , echo=TRUE}
+exis <- c(17,20,51)
+vector <- c()
+for (i in exis){
+vector <- c(vector,approxfun(density(datos,kernel = 'epanechnikov',window = 5))(i))
+}
+
+plot(pp.gau$x,pp.gau$y,type = "l",col="black",lwd=2)
+points(exis,vector,col="red",cex= 1.5)
+
+``` 
+
+#### 12
+
+Halle la ventana de convalidacion cruzada para la estimacion de la densidad basada en
+el nucleo normal utilizando los datos de Buffalo. Explore el comando bw.ucv.
+```{r , echo=TRUE}
+# https://aakinshin.net/posts/kde-bw/
+d <- density(datos,bw = "bcv")
+plot(d, lwd = 2, main = "Bandwidth bcv")
+
+``` 
+
+#### 13
+
+Grafique en un mismo plot las estimaciones de la densidad obtenidas con el nucleo de
+normal usando la ventana  optima obtenida en el item anterior y usando la ventana hS
+hallada previamente. Compare los resultados.    
+```{r , echo=TRUE,warning=FALSE}
+pp.gau = density(datos,kernel = 'gaussian',window = hsil)
+plot(pp.gau)
+# lines(pp.gau$x,pp.gau$y,type = "l",col="black",lwd=2)
+
+d <- density(datos,bw = "bcv")
+lines(d, lwd = 2, col='red')
+```     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+
+

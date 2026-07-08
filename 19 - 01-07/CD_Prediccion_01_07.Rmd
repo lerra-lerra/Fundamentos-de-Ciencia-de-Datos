@@ -1,0 +1,140 @@
+---
+title: "Regresion Parte 2"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ejercicio I
+Continuamos con el ejercicio de los datos de LIDAR de la practica anterior.
+La tecnica conocida como LIDAR (light detection and ranging) usa la reflexion de luz de laser emitida para detectar compuestos quımicos en la atmosfera. Esta tecnica ha probado ser una herramienta muy eficiente para el monitoreo de la distribucion de diversos elementos polulantes en la atmosfera (Sigrist, 1994).
+En el archivo lidar.txt se encuentran datos medidos con a la tecnica LIDAR. La variable range es la distancia recorrida antes de que la luz sea reflejada de regreso hacia su fuente. 
+La variable logratio es el logaritmo del cociente de la luz recibida de dos fuentes de luz laser de distinta frecuencia.
+
+#### 0.
+El objetivo de esta guıa es comparar diferentes metodos de prediccion, evaluando en un test set. Antes de empezar, separe un 10% de los datos para conformar el test set que se empleara en la comparacion final.
+```{r , echo=TRUE}
+datos<-read.csv("lidar.txt", header =TRUE, sep="")
+attach(datos)
+plot(x=range,y=int.conc)
+num_random<-sample(1:length(range),length(range)*0.1)
+datos_entrenamiento<-datos[-num_random,]
+datos_testeo<-datos[num_random,]
+
+```
+#### 1. 
+Por el metodo de mınimos cuadrados realice un ajuste de un modelo lineal polinomico de grado 4 en range. Grafique los puntos observados y la funcion de regresion estimada.
+
+```{r , echo=TRUE}
+
+rango <- range
+rango2 <- range**2
+rango3 <- range**3
+rango4 <- range**4
+
+lm(int.conc ~ range+rango2+ rango3 + rango4) 
+
+lm(int.conc ~ poly(range,4), data = datos_entrenamiento) 
+
+plot(range,int.conc)
+title("Lidiar: reg polin de grado 4  y no param")
+lines(range, predict(lm(int.conc ~ range+rango2+ rango3 + rango4 )),col= "blue", lwd=5)
+h_cv = 165
+lines(ksmooth(range, int.conc,"normal", bandwidth = h_cv),lwd=5, col="magenta")
+```
+#### 2. 
+Repita el item anterior considerando un modelo lineal polinomico de grado 9 y uno de grado 10 en range. Grafique y compare.
+
+```{r , echo=TRUE}
+modelo4 <- lm(int.conc ~ poly(range,4), data = datos_entrenamiento) 
+modelo9 <- lm(int.conc ~ poly(range,9), data = datos_entrenamiento) 
+modelo10 <- lm(int.conc ~ poly(range,10), data = datos_entrenamiento) 
+
+plot(datos_entrenamiento$range,datos_entrenamiento$int.conc)
+title("Lidiar: reg polin de grado 4  y no param")
+lines(datos_entrenamiento$range, predict(modelo4), col= "green", lwd=2)
+lines(datos_entrenamiento$range, predict(modelo9), col= "red", lwd=2)
+lines(datos_entrenamiento$range, predict(modelo10), col= "orange", lwd=2)
+
+h_cv = 165
+lines(ksmooth(datos_entrenamiento$range, datos_entrenamiento$int.conc,"normal", bandwidth = h_cv),lwd=2, col="magenta")
+
+
+```
+
+#### 3.
+Considerando polinomios de grado 1 a 10 y elija con cual propone predecir.
+
+```{r , echo=TRUE}
+
+plot(datos_entrenamiento$range,datos_entrenamiento$int.conc)
+title("Lidiar: reg polin de grado 4  y no param")
+
+calculo_ecpp <- function(datos,predichos){
+  errores <- c()
+  for (i in 1:length(datos)) {
+      valor <- datos$int.conc[i] - predichos[i]
+      errores <- c(errores, (valor**2))
+  }
+  mean(errores)
+}
+
+rango_maximo <- 10
+error <- c()
+for (i in 1:rango_maximo){
+  modelo <- lm(int.conc ~ poly(range,i), data = datos_entrenamiento) 
+  lines(datos_entrenamiento$range, predict(modelo), col= i , lwd=2)
+  
+  predichos <- predict.lm(modelo, datos_testeo)
+  ecpp <- calculo_ecpp(datos_testeo, predichos)
+  # print(ecpp)
+  error <- c(error, ecpp)
+  # queda calcular el ecpp mean((int.conc - pirulo)**2)
+}
+
+title(" Error del modelo vs grado del polinomio")
+
+plot(1:rango_maximo, error)
+```
+
+#### 4. 
+Considere polinomios hasta grado 10, regresion por nucleos Gaussianos y vecinos mas cercanos. 
+Determine en cada caso como predecir. Luego, evalue los procedimientos prouestos en el test set para elegır el metodo que utilizarıa en un nuevo valor de x.
+
+```{r , echo=TRUE}
+
+```
+
+#### 5 item agregado. 
+
+Polinomios de 1 a 20. 
+En base a Test_set elegir con cual quedarse
+Plot del error vs grado de polinomio
+```{r , echo=TRUE}
+
+plot(datos_entrenamiento$range,datos_entrenamiento$int.conc)
+title("Lidiar: reg polin de grado 4  y no param")
+rango_maximo <- 20
+error <- c()
+for (i in 1:rango_maximo){
+  modelo <- lm(int.conc ~ poly(range,i), data = datos_entrenamiento) 
+  lines(datos_entrenamiento$range, predict(modelo), col= i , lwd=2)
+  
+  predichos <- predict.lm(modelo, datos_testeo)
+  ecpp <- calculo_ecpp(datos_testeo, predichos)
+  # print(ecpp)
+  error <- c(error, ecpp)
+  # queda calcular el ecpp mean((int.conc - pirulo)**2)
+}
+
+title(" Error del modelo vs grado del polinomio")
+
+plot(1:rango_maximo, error)
+```
+
+

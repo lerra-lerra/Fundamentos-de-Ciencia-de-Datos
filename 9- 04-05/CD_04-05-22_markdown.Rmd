@@ -1,0 +1,297 @@
+---
+title: "Seguimos clasificando - Volvemos a las alturas"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Clase 5
+## Seguimos clasificando - Volvemos a las alturas
+El principal objetivo de esta guıa es afianzar los contenidos de clasificaci´on e integrarlos con conocimientos y trabajos pr´acticos previos: vamos a mezclar todo en la coctelera! 
+
+Para eso, vamos a volver a nuestro primer amor: los datos de alturas. 
+En este caso la idea es predecir a partir del dato de altura de un 
+individuo su g´enero implementando distintos plug–in en la regla optima de Bayes.
+
+Te recordamos que en esta pagina podras acceder nuevamente a los datos de alturas que generaste en un TP anterior y que vas a utilizar para resolver esta guıa. 
+La idea sigue siendo que cada uno trabaje con sus propios datos y por eso les pedimos que ingresen un numero de identificacion, ya sea el numero de libreta o los 5 ultimos del DNI para obtener datos de forma personalizada.
+
+#### 1. 
+Descargar de esta p´agina un conjunto de n = 500 observaciones, con todas las variables y leer el archivo en R. Trabajaremos con las variables altura y genero (codificada como F o M). Graficar un plot que pueda dar informaci´on sobre la relacion entre estas dos variables.
+
+```{r }
+datos <- read.csv('alturas_identificacion_42414_n_500.csv',sep=",", header=T)
+library(ggplot2)
+ggplot(datos) +
+  aes(x = genero, y = altura, fill = genero, colour = genero) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1) +
+  scale_color_hue(direction = 1) +
+  theme_bw()
+```
+
+#### 2.
+2. Con la regla de la mayorıa vamos a aprender a clasificar el genero de un individuo como femenino (1) o masculino (0) cuando su altura x = 165 mediante el *metodo de vecinos.* 
+Para ello, considerar los k = 10 vecinos mas cercanos y calcular la proporcion de 1’s. 
+Segun este resultado, ¿como clasificarıas al genero de un nuevo individuo con
+altura igual a 165 cm, F o M? Repetir con x = 175.
+
+```{r }
+###### 1.2 KNN
+promedio_vecinos <-function(datos,xnew, vecinos_cantidad ){
+  df <- data.frame(datos$altura,datos$genero)
+  df$datos.altura
+  df$resta = abs(df$datos.altura-xnew) # Resta con valor ingresado de todas las alturas
+  df <- df[order(df$resta),c(1,2,3)] # Ordeno el df
+  df
+  genero <- df[1:vecinos_cantidad,2] # Creo vector con los generos de los KNN vecinos mas cercanos
+  prop <- sum(genero == "F")/ vecinos_cantidad
+  prop
+}
+promedio_vecinos(datos,165, 100)
+
+clasifico_vecinos <-function(datos,altura,vecinos){
+  ifelse(promedio_vecinos(datos,altura, vecinos)>0.5,1,0) # 1 es F, 0 es M
+}
+clasifico_vecinos(datos,165, 10)
+```
+
+#### 3. 
+Con la regla de la mayor´ıa vamos a aprender a clasificar el g´enero de un individuo como femenino (1) o masculino (0) cuando su altura x = 165 mediante el metodo de *promedios moviles.* 
+Para ello, considerar una ventana de tama˜no h = 1,5 alrededor del
+punto de inter´es y calcular la proporci´on de 1’s. Seg´un este resultado, ¿como clasificarıas al genero de un nuevo individuo con altura igual a 165 cm, F o M? 
+Repetir con x = 175.
+
+```{r }
+###### 1.3 MOVIL
+promedio_movil <-function(datos,alturanueva,ventana){
+  prom_movil = datos[datos$altura>(alturanueva-ventana) & datos$altura<(alturanueva+ventana),]
+  prop <- sum(prom_movil$genero == "F")/ dim(prom_movil)[1]
+  prop
+    }
+ventana = 1.5
+altura = 165
+promedio_movil(datos,altura,ventana)
+
+clasifico_movil <-function(datos,altura,vecinos){
+  ifelse(promedio_movil(datos,altura, vecinos)>0.5,1,0) # 1 es F, 0 es M
+}
+clasifico_movil(datos,165, 10)
+```
+
+### 2
+### Funciones
+
+#### 4.
+Clasificar el genero de un individuo en F o M conociendo su altura mediante la regla de la mayorıa utilizando el m´etodo de vecinos m´as cercanos. Para ello, implementar la funcion ClasificoVecinos(X, Y, xNuevo, k=10) que tenga por input un conjunto de valores de X, sus correspondientes valores de Y, un nuevo valor x para el que se quiere realizar la clasificaci´on y la cantidad k = 10 de vecinos que vamos a utilizar para calcular la regla de la mayor´ıa. (...por ahora te damos el k...)
+
+```{r }
+###### 2.4 VECINOS
+ClasificoVecinos <- function(datos,alturanueva,ventana){
+  promedio_vecinos(datos,alturanueva, ventana)
+  clasifico_vecinos(datos,alturanueva, ventana)
+  }
+
+ClasificoVecinos(datos,169,10)
+```
+
+#### 5.
+Clasificar el genero de un individuo en F o M conociendo su altura mediante la regla de la mayorıa utilizando el m´etodo de promedios m´oviles. Para ello, implementar la funcion ClasificoMovil(X, Y, xNuevo, h=1) que tenga por input un conjunto de valores de X, sus correspondientes valores de Y, un nuevo valor x para el que se quiere realizar la clasificacion y una ventana h = 1 para calcular la regla de la mayor´ıa. (...por ahora te damos la ventana h...)
+```{r }
+###### 2.5 MOVIL
+ClasificoMovil <- function(datos,alturanueva,ventana){
+  promedio_movil(datos,alturanueva, ventana)
+  clasifico_movil(datos,alturanueva, ventana)
+}
+
+ClasificoMovil(datos,169,1.5)
+```
+
+### 3. 
+El aditivo aromatico: Regla optima de Bayes - Metodo Generativo.
+
+Recordemos que cuando la covariable es una variable continua la regla de Bayes optima puede escribirse como:
+gop(x) = 1 si f1(x)P(Y = 1) ≥ f0(x)P(Y = 0)
+         0 si c. c.
+donde X|Y = 0 ∼ f0 y X|Y = 1 ∼ f1 son las densidades condicionales. 
+Como hemos mencionado en clase, en los m´etodos generativos la regla de Bayes se implementa en la practica estimando las densidades f0 y f1 y la probabilidad P(Y = 1).
+
+#### 6. 
+Volvamos a la Guıa de Predicciones (clase 13/04) ıtems 6 y 7, donde se realizo
+un histograma de alturas para cada g´enero y se le superpuso una curva a cada uno de ellos. 
+¿Que curva se le superpuso a cada histograma? ¿Con que parametros?
+Realizar nuevamente los histogramas de alturas para cada cada sexo y a cada uno de ellos superponerle la curva como en la Gu´ıa 7.
+¿Que relacion guardan estas curvas con las densidades f0 y f1?
+
+```{r }
+##### 3.6
+hist(datos$altura, )
+
+library(ggplot2)
+masc = datos[datos$genero=="M",]
+hist(masc$altura , probability = TRUE)
+lines(density(masc$altura), col="blue", lwd=2)
+
+fem = datos[datos$genero=="F",]
+hist(fem$altura , probability = TRUE)
+lines(density(fem$altura), col="pink", lwd=2)
+```
+
+#### 7. 
+¿Cual es la proporcıon de individuos de genero femenino en tu conjunto de datos?
+¿Como estimarıas P(Y = 1) a partir de tus datos? ¿Cu´anto te da la estimaci´on propuesta?
+```{r }
+##### 3.7
+prop_fem <- sum(datos$genero == "F")/ dim(datos)[1]
+prop_fem
+```
+
+#### 8. 
+Haciendo un plug–in en gop(x) con las estimaciones de f1(x), f0(x), P(Y = 1) y
+P(Y = 0), vamos a aprender a clasificar el g´enero de un individuo como femenino (1) o masculino (0) cuando su altura x = 165. Usando el m´etodo generativo con tus datos, 
+¿c´omo clasificar´ıas a alguien nuevo con altura igual a 165 cm, F o M? Repetir
+el ´ıtem anterior para x = 175.
+
+#### 9. 
+Clasificar el genero de un individuo en F o M conociendo su altura mediante el m´etodo generativo. 
+Para ello, implementar la funcion ClasificoGenerativo(X, Y, xNuevo)
+que tenga por input un conjunto de valores de X, sus correspondientes valores de Y, un nuevo valor x para el que se quiere realizar la clasificaci´on.
+
+```{r }
+##### 3.8 y 9 
+masc = datos[datos$genero=="M",]
+fem = datos[datos$genero=="F",]
+# Probando codigo
+prop_fem <- sum(datos$genero == "F")/ dim(datos)[1]
+prop_fem
+
+mean(fem$altura)
+var(fem$altura)
+sd(fem$altura)
+# sd(fem$altura)/sqrt(length(fem$alturas)) 
+dnorm(150,mean(fem$altura),var(fem$altura))
+
+# Funcion
+plugin <-function(datos,alturanueva){
+  fem = datos[datos$genero=="F",]
+  masc = datos[datos$genero=="M",]
+  propfem = sum(datos$genero == "F")/ dim(datos)[1]
+  propmasc = sum(datos$genero == "M")/ dim(datos)[1]
+  ifelse( (dnorm(alturanueva,mean(fem$altura),var(fem$altura))*prop_fem) >= (dnorm(alturanueva,mean(masc$altura),var(masc$altura))*propmasc),1,0)
+}
+```
+
+
+```{r }
+plugin(datos,166) # 1 es mujer
+```
+
+
+
+
+### 5. 
+### Bonus Track
+Leyendo el fondo de la copa...
+11. Graficar xNuevo (en el eje de abscisas) tomando valores entre 160 y 170 con un paso de 0.01 y en el de ordenadas el valor con el que clasifica a cada valor la regla ClasificoVecinos que implementaste con tus datos (sugerimos representar con lınea).
+Interpretar el criterio con el que clasifica esta regla.
+12. Repetir el ´ıtem anterior con ClasificoMovil y ClasificoGenerativo y superponer
+con otro color al gr´afico anterior. Interpretar y comparar el criterio con el que clasifica cada regla.
+
+```{r }
+##################################### 5
+
+test <- read.csv('alturas.testeo.csv',sep=",", header=T)
+
+
+ClasificoVecinos(datos,166,10)
+
+ClasificoMovil(datos,166,1.5)
+
+plugin(datos, 166)
+
+
+# funcion_testeo <-function(df){
+nrep = dim(test)[1]
+lista_clasif_knn <-rep(NaN,nrep)
+lista_clasif_movil <-rep(NaN,nrep)
+lista_clasif_plug <-rep(NaN,nrep)
+
+  
+for (i in 1:nrep){ # rechazadora 1 si es par
+  # print(test$altura[i])
+  lista_clasif_knn[i] = ClasificoVecinos(test,test$altura[i],10)
+  # print(lista_clasif_knn[i])
+  lista_clasif_movil[i] = ClasificoMovil(test,test$altura[i],1.5)
+  # print(lista_clasif_movil[i])
+  lista_clasif_plug[i] = plugin(test,test$altura[i])
+}
+
+  # return(lista_clasif_knn,lista_clasif_movil,lista_clasif_plug)
+# }
+
+# a,b,c = funcion_testeo(test)
+test$genero2 = ifelse(test$genero =="F",1,0)
+test$genero2 = as.factor(test$genero2)
+dfgraficar <- data.frame(test$altura,test$genero2,
+                         lista_clasif_knn,lista_clasif_movil,lista_clasif_plug)
+
+dfgraficar$lista_clasif_knn = as.factor(dfgraficar$lista_clasif_knn)
+dfgraficar$lista_clasif_movil = as.factor(dfgraficar$lista_clasif_movil)
+dfgraficar$lista_clasif_plug = as.factor(dfgraficar$lista_clasif_plug)
+
+
+ggplot(dfgraficar, aes(test.altura)) +                    # basic graphical object
+  geom_point(aes(y= test.genero2), colour="green",shape=15) +  # first layer
+  geom_point(aes(y= lista_clasif_knn), colour="red",position = position_dodge2(w = 0.1))+  # second layer
+  geom_point(aes(y= lista_clasif_movil), colour="orange",position = position_dodge2(w = 0.2))+  # second layer
+  geom_point(aes(y= lista_clasif_plug), colour="blue",position = position_dodge2(w = 0.3))+
+  scale_color_manual(values = c("Women" ="blue",'Men' = '#3399ff')) + 
+  scale_shape_manual(values = c('Women' = 17, 'Men' = 16))
+
+```
+
+
+
+### 4. 
+### A batir!
+10. Ahora vamos a testear las reglas. En el archivo alturas.testeo.csv se encuentran 31 datos de altura que separamos para testear como funcionan los tres m´etodos implementados.
+Para ello, aplicar a este conjunto de datos cada una de las tres reglas implementadas en los ´ıtems anteriores, calcular el Error de Clasificaci´on Emp´ırico de cada clasificador sobre estos datos. ¿Cu´al de ellas te parece que clasifica mejor?
+```{r }
+######### ECM de cada metodo
+funcion_contar_errores <-function(df){
+  nrep = dim(df)[1]
+  lista_clasif_knns <-rep(0,nrep)
+  lista_clasif_movils <-rep(0,nrep)
+  lista_clasif_plugs <-rep(0,nrep)
+  
+  for (i in 1:nrep){
+    if (df$test.genero2[i] != df$lista_clasif_knn[i]){
+      lista_clasif_knns[i] = 1
+    }
+    if (df$test.genero2[i] != df$lista_clasif_movil[i]){
+      lista_clasif_movils[i] = 1
+    }
+    if (df$test.genero2[i] != df$lista_clasif_plug[i]){
+      lista_clasif_plugs[i] = 1
+    }
+    
+  }
+  print("Errores knn ")
+  print(sum(lista_clasif_knns))
+  
+  print("Errores movil ")
+  print(sum(lista_clasif_movils))
+  
+  print("Errores plug ")
+  print(sum(lista_clasif_plugs))
+}
+
+funcion_contar_errores(dfgraficar)
+
+```
+
+

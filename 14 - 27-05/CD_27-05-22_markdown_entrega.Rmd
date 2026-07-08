@@ -1,0 +1,92 @@
+---
+title: "Entrega: Estimacion de los cuantiles"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Error Cuadratico Medio
+
+Recordemos que si θ es un parametro de interes, el error cuadratico medio de un estimador
+θbn = θbn(X1, . . . , Xn) est´a dado por  ECM = E{(θbn − θ)2}. 
+
+Para obtener el ECM necesitamos conocer la distribucion de θbn. Sin embargo, cuando simulamos y generamos datos, podemos estimar el ECM con su versi´on emp´ırica,(ECME)
+
+### 20 
+Representar en una tabla el error cuadratico medio empırico, ECME, de los estimadores qb0.9 y qe0.9 para muestras de tamano n=50, n=150, n=200 y n=500, utilizando Nrep=1000 replicaciones en cada caso.
+¿Que estimador prefiere bajo este escenario?
+
+
+```{r , echo=TRUE}
+set.seed(1)
+enes <- c(50,150,200,500) # lista de los n para trabajar
+qsombecm <- c() # lista vacia donde se guardaran los ecm de q somb
+
+for (n in enes){ # recorro los n
+  
+# Qsomb
+lambda <- 0.1 
+Nrep<-1000  
+realidad = qexp(0.9,lambda) # mi realidad o la verdad
+
+quantiles_qsomb <-rep(NA, Nrep) # lista de cuantiles
+dif_qsomb_realid <-rep(NA, Nrep) # 
+
+for (i in 1:Nrep){
+  #Genero mi exponencial
+  mis_exponenciales<-rexp(n,lambda)   
+
+  # Para cada replica calculo quantile
+  quantiles_qsomb[i]<-quantile(mis_exponenciales, 0.9) 
+  
+  # Calculo diferencia entre qsomb y la realidad
+  dif_qsomb_realid[i]<-((quantiles_qsomb[i]-realidad)^2)
+}
+# Luego de calcular las diferencias hago el promedio y guardo el ECME
+qsombecm <- c(qsombecm, sum(dif_qsomb_realid)/Nrep )
+
+}
+
+# Ahora lo mismo pero para Qrulo
+
+qruloecm <- c()
+for (n in enes){
+  
+lambda <- 0.1
+Nrep<-1000  
+realidad = qexp(0.9,lambda)
+
+quantiles_qrulo <-rep(NA, Nrep)
+dif_qrulo_realid <-rep(NA, Nrep)
+
+for (i in 1:Nrep){
+  mis_exponenciales<-rexp(n,lambda)   #Genero exponenciales
+  lambdaestim <- 1/mean(mis_exponenciales) # ESTIMO LAMBDA diferencia con el otro
+  quantiles_qrulo[i]<- qexp(0.9,lambdaestim) # Para cada replica calculo quantile
+
+  # Calculo diferencia entre qsomb y la realidad  
+  dif_qrulo_realid[i]<-((quantiles_qrulo[i]-realidad)^2) 
+}
+qruloecm <- c(qruloecm, sum(dif_qrulo_realid)/Nrep)
+
+}
+# Creo el DF y agrego las listas con los distintos ECM
+df <- data.frame(enes,qsombecm,qruloecm)
+colnames(df) <- c('N','ECM qsomb','ECM qrulo')
+df
+```
+
+Se puede observar en la tabla, que para n chicos el primer estimador que no requiere 
+un modelo de fondo, posee un ECME mas grande que el otro estimador, que asume la 
+distribucion de los datos para calcular el lambda estimado y luego calcular el ECME. 
+
+En este caso, se preferiria utilizar el Qrulo, ya que da un error cuadratico medio empirico 
+menor que el otro estimador, pero para poder utilizarlo uno deberia conocer la distrubcion 
+de la variable a estimar en cuestion que es un dato no menor. 
+
+

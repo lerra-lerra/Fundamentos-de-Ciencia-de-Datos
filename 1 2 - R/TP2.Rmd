@@ -1,0 +1,115 @@
+---
+title: "TP2"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+El RMS Titanic fue en su momento el mayor barco de pasajeros del mundo, hundi´endose en su viaje
+inaugural de Southampton a Nueva York en el a˜no 1912. En el evento fallecieron 1514 de las 2223
+personas que iban a bordo, entre tripulaci´on y pasajeros.
+En el presente pr´actico se trabajar´a con el conjunto de datos titanic, que figura en el archivo titanic.csv. El conjunto de datos es un cl´asico de las competencias de ”Machine Learning“, donde se
+busca determinar un mecanismo de clasificaci´on que, en funci´on de diversos variables de cada pasajero,
+prediga si el pasajero sobrevivi´o o no a la cat´astrofe. Las variables del conjunto de datos son:
+survival: supervivencia (0 No, 1 S´ı).
+pclass: clase del pasajero (1,2 o 3).
+sex: sexo del pasajero (”male“, ”female“).
+age: edad del pasajero.
+sibsp: cantidad de hermanos y c´onyuges (totalizado) embarcados (n´umero entero).
+parch: cantidad de padres e hijos (totalizado) embarcados (n´umero entero).
+ticket: c´odigo del boleto (texto).
+fare: tarifa del pasaje (n´umero real).
+embarked: puerto de embarque (S= Southampton, Q=Queenstown, C = Cherbourg)
+Los datos contienen 1028 pasajeros y algunas variables contienen respuestas faltantes.
+
+
+1. Borrar todos los objetos existentes en el entorno de trabajo y establecer directorio de trabajo.
+2. Leer el conjunto de titanic.csv teniendo en cuenta que en la primera l´ınea del archivo figura el nombre de las variables y el tipo de separaci´on de los datos y as´ıgnelo al data.frame titanic.
+
+```{r}
+rm(list = ls())
+setwd("D:/Lorenzo/Cursos/CD Sued/R")
+titanico <- read.csv('titanic.csv',dec=",", header=T)
+```
+
+
+3. Inspeccionar los primeros casos del archivo y los ´ultimos.
+```{r}
+head(titanico)
+tail(titanico)
+```
+
+4. Abrir con el editor al data.frame e inspeccionar el archivo.
+5. Establecer el n´umero de variables y de casos.
+```{r}
+dim(titanico)
+```
+6. Realizar un attach de titanic.
+```{r}
+#?
+attach(titanico)
+```
+7. Inspeccionar los nombres de las variables de titanic e identificar de qu´e tipo de variable se trata cada una de ellas.
+```{r}
+names(titanico)
+str(titanico)
+```
+8. Calcule la chance de sobrevivir siendo hombre. Calcule la chance de sobrevivir siendo mujer.
+```{r}
+genero <- list('female','male')
+
+for (g in genero) {
+  hombres <- subset(titanico , sex== 'female')
+  print(paste0(g,' F: ',round(sum(hombres$survived == 1 )/ nrow(hombres),digits = 3)))
+  }
+```
+9. Cree que el tipo de ticket del pasajero (clase de cabina) esta asociado con su supervivencia?
+```{r}
+clases <- list(1,2,3)
+
+for (clase in clases) {
+  clase1 <- subset(titanico , pclass == clase )
+  print(clase)
+  print(paste0(clase,': ',round(sum(clase1$survived == 1 )/ nrow(clase1),digits=3)))}
+```
+
+10. Estudie la distribuci´on de las tarifas. Que observa? Le parece razonable suponer que la variable tarifa tenga distribuci´on normal? Calcule la media y la mediana. Puede decidir de antemano
+qui´en es mas grande si la media o la mediana?
+```{r}
+library(ggplot2)
+titanico <- read.csv('titanic.csv',dec=",", header=T)
+tarifa <- titanico$fare
+class(tarifa)
+sum(is.na(tarifa))
+
+tarifa <- as.numeric(as.character(titanico[,9])) 
+
+class(tarifa)
+sum(is.na(tarifa))
+
+hist(titanico$fare)
+
+```
+
+
+11. Estudie la relacion entre tarifa y clase y entre edad y clase.
+```{r}
+sexo <- titanico$sex
+clase <- titanico$pclass
+clase <- as.factor(clase)
+class(clase)
+counts.plot <- table(clase,sexo)
+barplot(counts.plot, legend= rownames(counts.plot))
+```
+12. Respecto a la relaci´on entre la edad y la tarifa podemos pensar que las personas mas jovenes ten´ıan menos dinero y por ende compraron los tiquetes m´as baratos. Puede confirmar esto en base a los datos?
+```{r}
+library(ggplot2)
+
+ggplot(titanico) +
+ aes(x = age, y = fare) +
+ geom_point(shape = "circle", size = 1.5, colour = "#112446") +
+ theme_minimal()
+```
+La idea de los puntos anteriores era explorar los datos usando boxplots, histogramas, scatterplots. Si le falto usar alguno de estos gr´aficos vuelva a empezar.

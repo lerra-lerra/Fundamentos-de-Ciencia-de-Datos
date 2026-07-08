@@ -1,0 +1,97 @@
+---
+title: "Entrega:  Estimadores de Maxima Verosimilitud"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Error Cuadratico Medio
+
+De aquı en mas consideraremos λ = 0,03. Utilizaremos θbn para denotar el estimador
+utilizado en la Parte 1, mientras que con θen denotamos el estimador obtenido en la
+Parte 2, asumiendo que los datos provienen de una distribuci´on exponencial.
+Recordemos que si θ es un par´ametro de inter´es, el error cuadr´atico medio de un
+estimador θbn = θbn(X1, . . . , Xn) est´a dado por
+
+Para obtener el ECM necesitamos conocer la distribuci´on de θbn. Sin embargo, cuando simulamos y generamos datos, podemos estimar el ECM con su versi´on emp´ırica,(ECME)
+haciendo
+
+siendo que θbn,k la estimacion obtenida en la k-esima replicacion.
+
+```{r , echo=TRUE}
+# Qsomb
+set.seed(123)
+enes <- c(50,150,200,500)
+titasombecm <- c()
+
+for (n in enes){
+  # Qsomb
+  lambda <- 0.03 # Realidad
+  realidad = pexp(40, rate=lambda) # Parametro realidad
+  Nrep<-1000  
+  
+  titasomb <-rep(NA, Nrep) 
+  dif_titasomb_realid <-rep(NA, Nrep)
+  
+  for (i in 1:Nrep){
+    mis_exponenciales<-rexp(n,lambda)   #Genero exponenciales
+    
+    # Para cada replica calculo quantile
+    titasomb[i]<-proba <- sum(mis_exponenciales<=40)/length(mis_exponenciales)
+    
+    # Calculo diferencia entre qsomb y la realidad  
+    dif_titasomb_realid[i]<-((titasomb[i]-realidad)^2) #Calculo dif estimacion qsomb y la realidad 
+  }
+  # vector <- c(vector, v)
+  titasombecm <- c(titasombecm, sum(dif_titasomb_realid)/Nrep )
+}
+
+
+
+# Qrulo
+titaruloecm <- c()
+
+for (n in enes){
+  # Titarulo
+  lambda <- 0.03 # Realidad
+  realidad = pexp(40, rate=lambda) # Parametro realidad
+  Nrep<-1000  
+  
+  titarulo <-rep(NA, Nrep) 
+  dif_titarulo_realid <-rep(NA, Nrep)
+  
+  for (i in 1:Nrep){
+    mis_exponenciales<-rexp(n,lambda)   #Genero exponenciales
+    lambdaestim <- 1/mean(mis_exponenciales)
+    # Para cada replica calculo quantile
+    titarulo[i]<-  pexp(40, rate=lambdaestim)
+    
+    # Calculo diferencia entre qsomb y la realidad  
+    dif_titarulo_realid[i]<-((titarulo[i]-realidad)^2) #Calculo dif estimacion qsomb y la realidad 
+  }
+  # vector <- c(vector, v)
+  titaruloecm <- c(titaruloecm, sum(dif_titarulo_realid)/Nrep )
+}
+
+df <- data.frame(enes,titasombecm,titaruloecm)
+colnames(df) <- c('N','ECM titasomb','ECM titarulo')
+df
+
+```
+
+Se puede observar en la tabla, que el ECM de titarulo posee un ECM menor que titasombrero
+para todos los n, y en este caso, titarulo asumia una distribucion de los datos,
+por lo que asumir la distribucion de los datos siempre y cuando esta sea la correcta, 
+genera un mayor ajuste a los mismos y un menor Error Cuadratico Medio Empirico. 
+
+"Si conozco la maquina, el error asociado sera menor, pero uno DEBE asumir conocer la maquina" 
+
+
+
+
+

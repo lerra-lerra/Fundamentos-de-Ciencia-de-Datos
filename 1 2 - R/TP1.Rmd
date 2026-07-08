@@ -1,0 +1,266 @@
+---
+title: "TP1"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## TP1
+### 1
+a) Sea
+x <- c(1,2,3)
+y <- c(6,5,4).
+Predecir el resultado de correr cada una de las siguientes l´ıneas y despu´es chequear
+las respuestas.
+x * 2
+x * y
+x[1] * y[2]
+1/x
+(1:10) * x[2]
+rep(c(1,1,2), times = 2)
+seq(from = 0, to = 10, length.out = 5) + 1:10
+
+```{r }
+x <- c(1,2,3)
+y <- c(6,5,4)
+print('x*2')
+x * 2
+print('x*y')
+x * y
+print('x[1]*y[1]')
+x[1] * y[2]
+print('1/x')
+1/x
+print('(1:10) * x[2]')
+(1:10) * x[2]
+rep(c(1,1,2), times = 2)
+seq(from = 0, to = 10, length.out = 5) + 1:10
+
+```
+
+b) ¿Qu´e ocurre si se multiplican 2 vectores de distinta longitud?
+
+```{r }
+x <- c(1,2,3)
+y <- c(7,6,5,4)
+print('x*2')
+x * 2
+print('x*y')
+x * y
+print('x[1]*y[1]')
+x[1] * y[2]
+print('1/x')
+1/x
+print('(1:10) * x[2]')
+(1:10) * x[2]
+
+
+# Probando rep y seq
+rep(c(1,2), times = 2)
+rep(c(1,2), each = 2)
+
+seq(from = 0, to = 10, length.out = 5) + 1:10
+
+```
+### 2
+
+2. a) Crear un vector llamado tratamiento con coordenadas A, B y C de manera que
+A aparezca 20 veces, B 18 y C 22.
+```{r }
+x <- c(rep('A', times = 20),rep('B', times = 18),rep('C', times = 22))
+print('x')
+x
+```
+
+b) Definir un vector J que sea una secuencia de 1 a 30 con un incremento de 2 y
+luego sumar la primera y la octava coordenadas.
+```{r }
+y <- seq(from = 1, to = 30, by=2)
+print('y')
+y
+
+#sumar la primera y la octava coordenadas.
+z <- y[1]+y[8]
+print(z)
+```
+
+### 3
+3. Calcular la suma de los n´umeros naturales del 1 al 100 usando R.
+```{r }
+x <- seq(from = 0, to = 100, by=1)
+sum(x)
+```
+
+### 4
+4. Calcular la suma de los cuadrados de los numeros naturales del 1 al 100 usando R.
+```{r }
+x <- seq(from = 0, to = 100, by=1)
+x<- x**2
+sum(x)
+x
+```
+
+### 5 
+5. Considerar el conjunto de datos airquality, incluıdo en la librerıa datasets. Pida ayuda con el comando ?airquality para obtener informaci´on.
+a) ¿Cuantas observaciones tiene el conjunto de datos? ¿Cu´antas variables?
+    posee 153 obs con 6 variables
+
+```{r }
+datos <- data("airquality") 
+# a
+dim(airquality) # posee 150 obs con 5 variables
+```
+b) ¿Cu´ales son los nombres de las variables?
+    "Ozone"   "Solar.R" "Wind"    "Temp"    "Month"   "Day"
+
+```{r }
+# b
+str(airquality)
+```
+c) ¿Qu´e variables tienen datos faltantes?
+    Ozone y Solar.R
+```{r }
+# c
+sum(is.na(airquality)) # 44
+sum(is.na(airquality$Ozone)) #37
+sum(is.na(airquality$Solar.R)) #7
+```
+d) ¿Cu´antas observaciones corresponden al mes de mayo?
+  31
+```{r }
+#d 
+sum(airquality$Month == 5)
+```
+
+### 6 
+6. Considerar el conjunto de datos mtcars en R. (Ver help(mtcars))
+a) ¿Qu´e autos tienen 4 velocidades?
+
+```{r }
+name <- mtcars
+datos <- data("mtcars") 
+# a
+dim(name) # posee 150 obs con 5 variables
+str(name)
+```
+b) ¿Qu´e subconjunto de mtcars es?
+```{r }
+# b
+mtcars[mtcars$disp > 150 & mtcars$mpg > 20,]
+```
+c) ¿Qu´e autos tienen 4 velocidades y transmisi´on manual?
+
+d) Hallar la cantidad media de millas por galon de los autos con 2 carburadores.
+```{r }
+#d 
+mean(name$carb == 2)
+aggregate(mpg~carb,data=subset(name,carb==2),mean)
+```
+
+7. El conjunto de datos arbolado-en-espacios-verdes.csv contiene datos de 2011 de
+todos los ´arboles de los espacios verdes de la ciudad de Buenos Aires. Los datos actualizados pueden encontrarse aqu´ı, junto con una descripci´on de los mismos .
+a) ¿Cu´antas observaciones tiene el conjunto de datos? ¿Cu´antas variables
+    51502    17
+
+```{r}
+getwd()
+datos<- read.csv("arbolado-en-espacios-verdes.csv",fileEncoding = "UTF-8")
+#A
+dim(datos)
+```
+b) ¿Cu´ales son los nombres de las variables?
+```{r}
+#B
+str(datos)
+names(datos)
+```
+c) Calcular la altura promedio de los ´arboles de la ciudad.
+    12.1671
+```{r}
+#C
+mean(datos$altura_tot)
+```
+d) ¿Cu´antos arboles habıa en 2011 en la plaza Arenales?
+  198
+```{r}
+#D
+# unique(datos$espacio_ve)
+sum(datos$espacio_ve == 'ARENALES')
+```
+e) Construya un data.frame llamado arboles_cercanos que contenga s´olo las filas correspondientes a su espacio verde favorito. Puede utilizar el comando sort para ordenar alfab´eticamente un vector de caracteres.
+```{r}
+#E
+datos_avellaneda <- subset(datos , espacio_ve == 'AVELLANEDA, NICOLÁS, Pres.')
+```
+
+f ) Utilizando el comando unique averigue los nombres de los ´arboles presentes en
+su espacio verde favorito en 2011.
+```{r}
+#F
+unique(datos_avellaneda$nombre_com)
+```
+
+8. Los datos TITANIC3 del paquete PASWR2 contienen informaci´on sobre los pasajeros
+del Titanic, incluyendo clase, sexo y si sobrevivieron o no, entre otras caracter´ısticas.
+a) Determine la proporci´on de sobrevivientes por clase.
+b) Calcule la proporci´on de sobrevivientes por clase y sexo. ¿Qui´en tuvo una tasa
+m´as alta de supervencia: los varones de 1ra clase o las mujeres de 3ra?
+c) ¿Cu´al era la edad de la mujer m´as grande que sobrevivi´o?
+```{r}
+library(PASWR2)
+name <- TITANIC3
+datos <-data(name)
+```
+a) Determine la proporci´on de sobrevivientes por clase.
+```{r}
+#A
+dim(name)
+str(name)
+
+clases <- list('1st','2nd','3rd')
+
+for (clase in clases) {
+  clase1 <- subset(name , pclass == clase )
+  print(clase)
+  print(sum(clase1$survived == 1 )/ nrow(clase1))}
+```
+b) Calcule la proporci´on de sobrevivientes por clase y sexo. ¿Qui´en tuvo una tasa m´as alta de supervencia: los varones de 1ra clase o las mujeres de 3ra?
+
+```{r}
+#B
+
+clases <- list('1st','2nd','3rd')
+
+for (clase in clases) {
+  clase1 <- subset(name , pclass == clase & sex== 'female')
+  print(paste0(clase,' F: ',sum(clase1$survived == 1 )/ nrow(clase1)))
+
+  clase2 <- subset(name , pclass == clase & sex== 'male')
+  print(paste0(clase,' M: ',sum(clase2$survived == 1 )/ nrow(clase2)))
+  }
+```
+c) ¿Cu´al era la edad de la mujer m´as grande que sobrevivi´o?
+```{r}
+#C
+mujeres <- subset(name , sex== 'female')
+max(mujeres$age,na.rm=TRUE)
+```
+
+
+9. El conjunto de datos CARS2004 del paquete PASWR2 contiene datos de autom´oviles
+en Europa del a˜no 2004. ( ver help(CARS2004))
+a) Calcular cantidad total de autos en cada pa´ıs.
+b) Calcular la tasa de mortalidad de automovilistas para cada pa´ıs como el n´umero
+total de muertes de automovilistas dividido el n´umero total de autos.
+c) Hacer un gr´afico de barras que indique la tasa de mortalidad en accidentes de
+tr´ansito de cada pa´ıs de la Uni´on Europea. Ordene las barras de forma creciente.
+d) ¿Qu´e pa´ıs tiene la menor tasa de mortalidad de automovilistas y qu´e pa´ıs la m´as
+baja?
+e) Haga un gr´afico de cantidad total de autos vs poblaci´on. ¿C´omo describir´ıa la
+relaci´on?
+f ) Haga un gr´afico de cantidad total de autos vs tasa de mortalidad de automovilistas. ¿C´omo describir´ıa la relaci´on?
+```{r}
+
+```

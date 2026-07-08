@@ -1,0 +1,138 @@
+---
+title: "Regresion no parametrica"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ejercicio I
+La tecnica conocida como LIDAR (light detection and ranging) usa la reflexion de luz de laser emitida para detectar compuestos quımicos en la atmosfera. 
+Esta t́ecnica ha probado ser una herramienta muy eficiente para el monitoreo de la distribucion de diversos elementos polulantes en la atmosfera (Sigrist, 1994).
+En el archivo lidar.txt se encuentran datos medidos con a la tecnica LIDAR. La variable range es la distancia recorrida antes de que la luz sea reflejada de regreso hacia su fuente.
+La variable logratio es el logaritmo del cociente de la luz recibida de dos fuentes de luz laser
+de distinta frecuencia.
+
+
+#### 1. 
+A partir de los datos de lidar.txt realice un diagrama de dispersion o scatter plot de range
+(eje x) vs. logratio (eje y). Describa la relacion entre ambas variables.
+```{r , echo=TRUE}
+datos<-read.csv("lidar.txt", header =TRUE, sep="")
+attach(datos)
+
+plot(x=range,y=int.conc)
+```
+#### 2. 
+La funcion de R ksmooth computa el estimador de Nadaraya-Watson a partir de un conjunto de datos (x1, y1), . . . , (xn, yn) y lo eval ́ua en un conjunto de puntos intermedios. 
+Mediante la funcion de R ksmooth estime la funcion de regresion r que relaciona a las variables range y logratio, tomando como variable explicativa a range, a partir de los datos dados usando el n ́ucleo normal con ventana h = 5. Con la funciıon de regresion estimada, obtenga obtenga estimaciones de la funcion de regresion en los valores observados de range. 
+Grafique la funcion de regresion estimada. Repita para valores de la ventana h = 10, 30, 50 y superponga en el mismo plot los puntos correspondientes a las observaciones y el valor estimado de la funcion de regresion obtenida para h = 5, 10, 30, 50.
+Compare los resultados obtenidos con las 4 ventanas.
+```{r , echo=TRUE}
+ventanas<-c(5,10,30,50)
+for (i in 1:length(ventanas)) {
+  estimacion_Nadaraya<-ksmooth(x=range, y=int.conc, kernel =  "normal", bandwidth = ventanas[i])
+if(i==1){
+  plot(x=estimacion_Nadaraya$x,y=estimacion_Nadaraya$y, cex=0.5)
+}
+else{points(x=estimacion_Nadaraya$x,y=estimacion_Nadaraya$y, col=i+1, cex=0.5)}
+}
+```
+
+#### 3.
+
+Para cada una de las 4 estimaciones obtenidas en el item anterior compute el Error Cuadratico de Prediccion Promediado (ECP P (h)). ¿Cual de las 4 ventanas consideradasda el menor ECP P (h)? ¿Como se puede justificar lo que esta ocurriendo?
+```{r , echo=TRUE}
+ventanas<-c(5,10,30,50)
+ecpp<-c()
+for (i in 1:length(ventanas)) {
+  estimacion_Nadaraya<-ksmooth(x=range, y=int.conc, kernel =  "normal", bandwidth = ventanas[i])
+
+  valores_error <-c()
+  for (j in 1:length(datos)) {
+  y_estimado<-approxfun(estimacion_Nadaraya)(range[j])
+  valores_error <- c(valores_error,(int.conc[j]-y_estimado)**2)
+}
+  ecpp<-c(ecpp,sum(valores_error)/length(datos))
+}
+ecpp
+```
+
+#### 4. 
+Halle mediante el criterio de Convalidacion Cruzada CV (h) la ventana  optima. Realice la busqueda en una grilla para valores de h entre 3 y 165 con paso 1. Realice un plot de h vs. CV (h).
+```{r , echo=TRUE}
+grilla<-seq(3,165,by=1)
+num_random<-sample(1:length(range),length(range)*0.2)
+datos_entrenamiento<-datos[-num_random,]
+datos_testeo<-datos[num_random,]
+
+ecpp<-c()
+for (i in 1:length(grilla)) {
+  estimacion_Nadaraya<-ksmooth(x=datos_entrenamiento$range, y=datos_entrenamiento$int.conc, kernel =  "normal", bandwidth = grilla[i])
+
+  valores_error <-c()
+  for (j in 1:length(datos_testeo)) {
+    y_estimado<-approxfun(estimacion_Nadaraya)(range[j])
+    valores_error <- c(valores_error,((datos_testeo$int.conc[j]-y_estimado)**2))
+  }
+  ecpp<-c(ecpp,sum(valores_error)/length(datos_testeo))
+}
+
+plot(grilla,ecpp)
+h_optima<-grilla[which.min(ecpp)]
+h_optima
+```
+
+#### 5. 
+Grafique los puntos observados y la funcion de regresion estimada por el metodo de Nadaraya-Watson con la ventana  optima hallada.
+```{r , echo=TRUE}
+
+estimacion_Nadaraya<-ksmooth(x=range, y=int.conc, kernel =  "normal", bandwidth = h_optima)
+plot(datos$range,y=datos$int.conc)
+points(x=estimacion_Nadaraya$x,y=estimacion_Nadaraya$y, col=2)
+
+```
+#### 6. 
+Compute el Error Cuadratico de Prediccion Promediado de la estimacion provista por el metodo de Nadaraya-Watson con la ventana optima hallada: ECPP (hopt)
+```{r , echo=TRUE}
+# hoptima del punto 4
+estimacion_Nadaraya<-ksmooth(x=range, y=int.conc, kernel =  "normal", bandwidth = h_optima)
+
+valores_error <-c()
+for (j in 1:length(datos)) {
+  y_estimado<-approxfun(estimacion_Nadaraya)(range[j])
+  valores_error <- c(valores_error,(int.conc[j]-y_estimado)**2)
+}
+```
+
+#### 7. 
+Compute la Perdida de Convalidacion Cruzada asociada al la estimacion provista por el metodo de Nadaraya-Watson con la ventana  optima hallada. CV (hopt)
+
+```{r , echo=TRUE}
+num_random<-sample(1:length(range),length(range)*0.2)
+datos_entrenamiento<-datos[-num_random,]
+datos_testeo<-datos[num_random,]
+
+estimacion_Nadaraya<-ksmooth(x=datos_entrenamiento$range, y=datos_entrenamiento$int.conc, kernel =  "normal", bandwidth =  h_optima)
+
+valores_error <-c()
+for (j in 1:length(datos_testeo)) {
+    y_estimado<-approxfun(estimacion_Nadaraya)(range[j])
+    valores_error <- c(valores_error,((datos_testeo$int.conc[j]-y_estimado)**2))
+}
+ecpp <- sum(valores_error)/length(datos_testeo)
+ecpp
+```
+
+#### 8.
+8. ¿Que se puede hacer con knn?
+```{r , echo=TRUE}
+
+```
+
+Ejercicio II. Bonus Track Revisitemos la gu ́ıa de alturas con este nuevo marco te ́orico;
+elija h y k con las diferentes propuestas consideradas en dclase.

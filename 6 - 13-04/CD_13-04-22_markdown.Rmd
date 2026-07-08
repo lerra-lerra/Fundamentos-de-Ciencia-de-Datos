@@ -1,0 +1,325 @@
+---
+title: "tp_08-4"
+output: 
+  pdf_document
+    # latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Clase 5
+## Alturas
+
+
+### 1 y 2
+
+Simular el numero de una figurita elegida al azar si el album es de 6 figuritas. ¿Que comando sirve?
+#Simular el llenado de un album de 6 figuritas e indicar cuantas figuritas se debieron comprar para completarlo.
+
+## Manos a la obra - Parte I // Calentando Motores
+#### 1 y 2 // 1 
+1. Descarga datos correspondiente a 200 individuos.
+2. Leer el archivo de datos en R.
+
+```{r }
+datos<-read.csv("alturas_identificacion_42414_n_200.csv",fileEncoding = "UTF-8")
+```
+
+
+#### 3 // 2
+Identificar el nombre de las columnas del data.frame.
+
+```{r }
+str(datos)
+names(datos)
+```
+
+#### 4. 
+¿Cuantos individuos conforman tu conjunto de observaciones?
+
+```{r }
+dim(datos)
+```
+
+
+#### 5.  // 3
+Calcular el promedio de las alturas de los hijes para predecir la altura de un nuevo individuo.
+
+```{r }
+mean(datos$altura) #166.885
+```
+
+
+####  // 4 
+Realizar un histograma de las alturas de les hijes.  ¿Cu   antas modas se observan?  ¿A que se puede atribuir?
+```{r }
+datos<-read.csv("alturas_n_500.csv",fileEncoding = "UTF-8")
+names(datos)
+mean(datos$altura)
+hist(datos$altura, breaks=100)
+```
+
+#### // 5. 
+Explor el comanado plot(density(variable)), utilizando como variable la columna
+de alturas con las que se realiz   o el histograma.  ¿Qu   e est   a pasando?  ¿Cu   antas modas
+observa?  ¿A qu   e se puede atribuir?
+```{r }
+plot(density(datos$altura))
+#se Ven dos modas producto seguramente dle genero
+```
+
+#### //6. 
+Realizar ahora un histograma de alturas por cada g   enero. Es decir, un histograma para las alturas correspondientes al genero Masculino y otro para las alturas correspondientes al genero Femenino.
+
+```{r }
+library(ggplot2)
+masc = datos[datos$genero=="M",]
+g = plot(density(masc$altura))
+
+fem = datos[datos$genero=="F",]
+plot(density(fem$altura))
+```
+
+#### // 7. 
+Superponer en cada histograma del item anterior una funcion de densidad normal con los parametros que consideres pertinentes.
+```{r }
+hist(masc$altura , probability = TRUE)
+lines(density(masc$altura), col="blue", lwd=2)
+hist(fem$altura , probability = TRUE)
+lines(density(fem$altura), col="purple", lwd=2)
+```
+
+
+
+
+
+#### 6 // 8
+¿Con que valor se puede predecir la altura de un nuevo individuo masculino
+
+```{r }
+masc = datos[datos$genero=="M",]
+mean(masc$altura) #172.6696
+```
+
+####   7 // 9 
+¿Con que valor se puede predecir la altura de un nuevo individuo masculino cuya madre es bajita?
+
+```{r }
+mascbaj = datos[datos$genero=="M" & datos$contextura_madre=="bajita",]
+mean(mascbaj$altura) #169.8944
+```
+
+
+
+
+
+
+
+
+## Manos a la obra - Parte II // Con altura Madre
+#### 1. // 10
+Graficar altura de mama (en el eje x) vs. altura del hije (eje y), utilizando un color por cada g   enero.
+
+```{r, warning =FALSE }
+library(ggplot2)
+ggplot(datos)+aes(x = datos$altura_madre, y = datos$altura, color=datos$genero )+geom_point(size = 0.6)
+```
+
+
+Nos quedamos con los datos con genero =="M"
+
+```{r }
+masc = datos[datos$genero=="M",]
+```
+
+#### 2. // 13
+Promedio movil centrado en 156 con ventana de tamno 1 (cm).
+
+```{r }
+a = 1 
+altura = 156
+prom_movil = masc[masc$altura_madre>altura-a & masc$altura_madre<altura+a,]
+```
+
+#### 2.1  //13a
+
+Indique cuantos casos hay donde la madre registre una altura entre 155 y 157 cm., inclusive.
+
+
+```{r }
+dim(prom_movil) # 17 datos
+
+```
+
+
+##### 2.2  // 13b
+
+Calcule el promedio de la altura de los hijos cuyas madres registran una altura entre 155 y 157 cm.
+
+```{r }
+mean(prom_movil$altura) # 171.3
+```
+
+
+
+
+
+
+
+
+
+
+## Tarea 3:
+#### 1. 
+Promedio movil centrado en 156 con ventana de tamno 3 (cm)
+
+```{r }
+# Funcion Promedio movil, lee solo el archivo, solo se le pasa la ventana y la altura a predecir
+promedio_movil <-function(a,altura){
+   datos<-read.csv("alturas_identificacion_42414_n_200.csv",fileEncoding = "UTF-8")
+   masc = datos[datos$genero=="M",]
+   prom_movil = masc[masc$altura_madre>altura-a & masc$altura_madre<altura+a,]
+   mean(prom_movil$altura)
+  }
+ventana = 3
+altura = 156
+promedio_movil(ventana,altura)
+```
+
+
+Hasta ahora hemos trabajado con dos posibles valores para la altura de la madre (156 y 159) y dos posibles valores de ventana (h =0.5 y h = 1). 
+Vamos ahora a implementar una funcion que permita predecir la altura de un hijo en funci   on de la altura de la madre y el tama   no h de ventana elegida para hacer el promedio m   ovil.
+
+#### 15. 
+Implemente una funcion que permita predecir la altura de un hijo en funcion de la altura de la madre, los datos para la altura de los individuos y de las madres y el tamano h de ventana elegida para hacer el promedio m   ovil. Es decir, defina la funcion predigo altura masculino(altura, altura madre, altura mama nueva, h)
+```{r }
+#datos<-read.csv("alturas_n_500.csv",fileEncoding = "UTF-8")
+#masc = datos[datos$genero=="M",]
+#attach(masc)
+
+promedio_movil <-function(altura_mama_nueva, h){
+  datos<-read.csv("alturas_n_500.csv",fileEncoding = "UTF-8")
+  masc = datos[datos$genero=="M",]
+  prom_movil = masc[masc$altura_madre>altura_mama_nueva-h & masc$altura_madre<altura_mama_nueva+h,]
+  mean(prom_movil$altura)
+}
+
+promedio_movil(156, 3)
+```
+
+
+#### 16. 
+Graficar la funcion predigo altura masculino, con h =0.5, evaluandola a lo largo de una una grilla sobre un intervalo que cubra todas las alturas observadas en las madres.
+```{r }
+# Para un vector dado(en este caso las alturas de la madre) y con una ventana, genera los promedios moviles
+graficador <- function (vector,ventana){
+  promedios <-c()
+  for(i in vector){
+    promedios <-c(promedios,promedio_movil(i,ventana))
+  }
+  promedios
+}
+datos<-read.csv("alturas_n_500.csv",fileEncoding = "UTF-8")
+masc = datos[datos$genero=="M",]
+vector = masc$altura_madre
+prom = graficador(vector,0.5)
+
+library(ggplot2)
+gg<-ggplot(data = masc,aes(x=altura_madre,y=altura))+geom_point()
+gg+geom_line(aes(x=vector,y=prom),colour="red")
+```
+
+
+
+#### 17. 
+Repita el item anterior usando h = 1. Repita usando h = 5. Grafique las tres funciones
+en un mismo grafico utilizando un color diferente para cada valor de h.
+Hasta el momento hemos trabajado utilizando siempre un mismo conjunto de datos.
+Vamos ahora a implementar nuevas funciones que incluyan entre sus argumentos a los
+datos. Es decir,
+
+```{r }
+datos<-read.csv("alturas_n_500.csv",fileEncoding = "UTF-8")
+masc = datos[datos$genero=="M",]
+vector = masc$altura_madre
+prom = graficador(vector,0.5)
+prom1 = graficador(vector,1)
+prom2 = graficador(vector,5)
+
+
+library(ggplot2)
+gg<-ggplot(data = masc,aes(x=altura_madre,y=altura))+geom_point()
+gg+geom_line(aes(x=vector,y=prom),colour="red")+
+  geom_line(aes(x=vector,y=prom1),colour="blue")+
+  geom_line(aes(x=vector,y=prom2),colour="green")
+```
+
+#### 18. 
+Implemente una funcion que tenga por input un conjunto de valores de X, sus correspondientes valores de Y, un nuevo valor x donde queremos predecir, y el tamano h de la  ventana que vamos a utilizar a la hora de hacer promedios moviles. predigoVentana(X,Y, xNuevo, h)
+
+```{r }
+predigo_movil_ventana<- function(X,Y,xNuevo,h){
+ if(sum(X>=(xNuevo-h) & X<=(xNuevo+h))==0){predigo<- NA}
+ else{indices<-which(X>=(xNuevo-h) & X<=(xNuevo+h))
+ predigo<-mean(Y[indices])}
+ predigo
+}
+```
+
+#### 19. 
+
+Pensar en alguna situacion relacionada a su campo de trabajo donde pueda ser im-
+portante predecir cierta variable respuesta con una (o varias) variables explicativas.
+Contanos el problema, el marco te   orico y avisanos si ten   es datos que puedas compar-
+tir. Asi vemos que d   
+
+## 4. Por si fuera poco
+
+#### 20. 
+Calcular ahora predicciones para la altura del hijo conociendo la altura de la madre
+haciendo promedio de vecinos cercanos. Para ello, implementar una funci´on que tenga
+por input un conjunto de valores de X, sus correpondientes valores de Y, un nuevo valor
+x donde queremos predecir, y la cantidad k de vecinos que vamos a utilizar a la hora
+de hacer promedios. predigoVecinos(X, Y, xNuevo, k)
+
+```{r }
+datos<-read.csv("alturas_n_500.csv",fileEncoding = "UTF-8")
+masc = datos[datos$genero=="M",]
+altura = masc$altura
+altura_madres = masc$altura_madre
+
+predigo_vecinos <-function(alturas,madres,xnew, vecinos_cantidad ){
+  # Mi codigo pero por alguna razon cuando grafico me lo hace mal 
+# df <- data.frame(alturas,madres)
+# df$resta = abs(madres-xnew)
+# df[order(df$resta),c(1,2,3)]
+# mean(df$alturas[1:vecinos_cantidad])
+
+orden<- order(abs(madres-xnew))
+indices<- orden[1:vecinos_cantidad]
+predigo<-mean(alturas[indices])
+predigo
+
+}
+
+predigo_vecinos(altura,altura_madres,165, 2)
+predigo_vecinos(altura,altura_madres,175,2)
+
+## Voy a graficar
+cantidad_vecinos <- 10
+altura_mom<- masc$altura_madre
+grilla<- seq(min(altura_mom),max(altura_mom),length=length(altura_mom))
+predichov<- rep(NA, length(grilla))
+for(i in 1:length(altura_mom)){
+ predichov[i]<- predigo_vecinos(altura,altura_madres,grilla[i],cantidad_vecinos)
+}
+masc$grilla<- grilla
+masc$predichov<- predichov
+library(ggplot2)
+gg<-ggplot(data = masc,aes(x=altura_madre,y=altura))+geom_point()
+gg+geom_line(aes(x=grilla,y=predichov),colour="red")
+```
+
