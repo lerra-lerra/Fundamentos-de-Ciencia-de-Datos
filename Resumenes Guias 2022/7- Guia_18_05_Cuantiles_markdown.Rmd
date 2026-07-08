@@ -1,0 +1,232 @@
+---
+title: "Simulaciones Cuantiles"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Repaso
+
+Finalmente, empezamos a hablar de estadıstica. De estimacion, de datos.
+
+Repasemos brevemente el marco teorico bajo el cual estamos trabajando:
+
+* Para nosotros poblacion es la distribucion que genera los datos.
+* Muestra: X1, . . . , Xn iid, Xi ∼ F, F es la poblacion.
+* Cualquier cantidad θ = θ(F) relacionada a F se dice parametro poblacional.
+* Cuando hacemos estadıstica no conocemos a F ni al valor del parametro poblacional θ de interes.
+* Cuando hacemos estadıstica queremos hacer una cuenta con la muestra que nos permita estimar el valor θ de interes.
+
+Estimador: θbn = θbn(X1 . . . , Xn)
+Estimacion: θbn,obs = θbn(x1 . . . , xn),
+donde x1, . . . , xn representan datos. Valores observados. Notemos que:
+
+* el estimador θbn ES UNA NUEVA VARIABLE ALEATORIA (a cada uno le da otra cosa)
+* la estimacion θbn,obs es un numero: una realizacion del estimador. El resultado que obtengo con MIS datos.
+* el estimador θbn, por ser una variable aleatoria, tiene SU PROPIA distribucion, su propia esperanza, varianza y todo lo que se le pueda pedir a una variable aleatoria.
+
+Algunas definiciones importantes:
+
+* Consistencia: (θbn)n≥1 se dice consistente si θbn → θ en probabilidad. Esta propiedad, por lo general, la podemos deducir combinando la Ley de los Grandes Numeros con alguna otra propiedad.
+* Sesgo: El sesgo de un estimador se define como E(θbn) − θ. Cuando un estimador es promedio de algo, resulta facil calcular su esperanza. Si no...
+
+Gracias a la Ley de los Grandes Numeros y otras yerbas, hemos estudiado propiedades de los estimadores propuestos para µ, para una probabilidad p y para σ2.
+
+## Estimadores que son promedio.
+
+Si el estimador es tita_sombrero= promedio de mongo, ocurren dos cosas importantes:
+
+* Conocemos la esperanza del estimador: E(θbn) = E(mongo), por propiedad de linealidad de la esperanza.
+* Ademas, de la Ley de los Grandes Numeros, sabemos que el tita_sombrero que es el promedio de mongo converge a la esperanza de mongo. Es decir, el estimador es consistente sii θ = E(mongo), en cuyo caso tambien resulta insesgado.
+* Si mongo de i son i.i.d. y con distribucion normal, la distribucion de θbn tambien es normal: promedio de normales ES normal.
+* Si mongo de i son i.i.d. y n es grande, en muchas circunstancias podemos decir que la distribucion de θbn es APROXIMADAMENTE normal, gracias al Teorema Central del Lımite.
+
+
+Hemos estado estudiando la convergencia del promedio en distintos sentidos: en probabilidad que resulta de la Ley de los Grande Numeros y en distribucion que resulta del Teorema Central del Lımite, ambos juegan un rol fundamental en la Estadıstica.
+
+Ahora la pregunta es: ¿Como se comportan los cuantiles muesrales y su distribucion? No tenemos propiedades que garanticen la consistencia de los quantiles muestrales a los poblacionales. En esta Guıa vamos a estudiar mediante una simulaci´on el comportamiento de los cuantiles muestrales, a medida que n aumenta. Esperamos ver que convergen a donde queremos (¡los cuantiles poblacionales!).
+
+# Consistencia de los cuantiles muestrales o empıricos
+
+## Distribucion Uniforme
+
+Sean Xi ∼ U(a, b) siendo a = 67 y b = 73. Utilizaremos X para denotar de manera
+generica una variable con esta misma distribucion.
+
+### Cuantiles poblacionales vs. muestrales o empıricos
+1. ¿Cuanto vale q0,9 = F−1 (0,9)?
+```{r , echo=TRUE}
+#Cuantil poblacional. Se puede calcular matematicamente o con comando en R
+a<-67
+b<-73
+p<-0.9
+cuantil_90<-(b*p)+(a*(1-p)) #72.4
+cuantil_902<-qunif(0.9,a,b) #72.4
+```
+2. Guardar en el vector muchas uniformes, Nrep = 1000 datos con distribucion 
+U(a, b) siendo a = 67 y b = 73, utilizando el comando runif().
+```{r , echo=TRUE}
+Nrep<-1000
+muchas_uniformes<-runif(Nrep,67,73)
+```
+3. Guardar en el vector muchos cuantiles uniformes los cuantiles muestrales correspondientes a las primeras n observaciones del vector muchas uniformes, con n = 1, . . . , Nrep. Explorar el comando quantile(x= ,probs= ).
+4. Graficar n (en el eje x) versus el cuantil empırico de los primeros n datos. Utilizar ylim=c(65,75).
+```{r , echo=TRUE}
+muchos_cuantiles_uniformes<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchos_cuantiles_uniformes[i]<-quantile(muchas_uniformes[0:i],probs = 0.9)
+}
+plot(1:Nrep,muchos_cuantiles_uniformes,ylim = c(65,75))
+```
+5. Repetir los ıtems 2 a 4 Ngen = 10 veces, agregando al grafico anterior los cuantiles de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen) {
+  muchas_uniformes<-runif(Nrep,67,73)
+  muchos_cuantiles_uniformes<-rep(NA,Nrep)
+  for (i in 1:Nrep){
+    muchos_cuantiles_uniformes[i]<-quantile(muchas_uniformes[1:i],probs=0.9)
+  }
+  if(j==1){plot(1:Nrep, muchos_cuantiles_uniformes,ylim = c(65,75))}
+  else{
+  points(1:i,muchos_cuantiles_uniformes,ylim = c(65,75), col=j)
+  }
+}
+```
+6. Indicar cual espera que sea el valor lımite de estas sucesiones. ¿Se condice con lo que muestra el grafico?
+Los cuantiles convergen a los cuantiles poblacionales.
+
+## Distribucion Normal
+
+Sean Xi ∼ N (µ, σ2) siendo µ = 70, σ2 =1.2. Utilizaremos X para denotar de manera generica una variable con esta misma distribucion.
+
+### Cuantiles poblacionales vs. muestrales o empıricos
+1. ¿Cuanto vale q0,9 = F−1(0.9)? 
+```{r , echo=TRUE}
+#Cuantil poblacional
+mu<-70
+sd<-sqrt(1.2)
+cuantil_normal0.9<-qnorm(0.9,mu,sd) #71.403
+```
+2. Guardar en el vector muchas normales, Nrep = 1000 datos con distribuci´on N (µ, σ2) siendo µ = 70 y σ 2 =1.2, utilizando el comando rnorm().
+```{r , echo=TRUE}
+muchas_normales<-rnorm(Nrep,mu,sd)
+```
+3. Guardar en el vector muchos cuantiles normales el cuantil empırico de las primeras n observaciones del vector muchas normales, con n = 1, . . . , Nrep.
+4. Graficar n (en el eje x) versus el cuantil empırico de los primeros n datos. Utilizar ylim=c(60,80).
+```{r , echo=TRUE}
+muchos_cuantiles_normales<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchos_cuantiles_normales[i]<-quantile(muchas_normales[1:i],probs = 0.9)
+}
+plot(1:Nrep,muchos_cuantiles_normales,ylim = c(60,80))
+```
+5. Repetir los ıtems 2 a 4 Ngen = 10 veces, agregando al gr´afico anterior los cuantiles de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen) {
+  muchas_normales<-rnorm(Nrep,mu,sd)
+  muchos_cuantiles_normales<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchos_cuantiles_normales[i]<-quantile(muchas_normales[1:i],probs = 0.9)
+}
+  if(j==1){plot(1:Nrep, muchos_cuantiles_normales,ylim = c(60,80))}
+  else{
+  points(1:i,muchos_cuantiles_normales,ylim = c(60,80), col=j)
+  }
+} 
+```
+6. Indicar cual espera que sea el valor lımite de estas sucesiones. ¿Se condice con lo que muestra el grafico?
+Idem antes.
+
+## Distribucion Exponencial
+
+Sean Xi ∼ E(λ) siendo λ = 1/10. Utilizaremos X para denotar de manera generica una variable con esta misma distribucion.
+
+### Cuantiles poblacionales vs. muestrales (o empıricos)
+1. ¿Cuanto vale q0,9 = F−1 (0,9)?
+```{r , echo=TRUE}
+#Cuantil poblacional
+cuantil_exp0.9<-qexp(0.9,0.1) #23.0258
+```
+2. Guardar en el vector muchas exponenciales, Nrep = 1000 datos con distribucion E(λ) siendo λ = 1/10, utilizando el comando rexp().
+```{r , echo=TRUE}
+Nrep<-1000
+muchas_exp<-rexp(Nrep,0.1)
+```
+3. Guardar en el vector muchos cuantiles exponenciales el cuantil muestral de las primeras n observaciones del vector muchas exponenciales, con n = 1, . . . , Nrep.
+4. Graficar n (en el eje x) versus el cuantil muestral de los primeros n datos. Utilizar ylim=c(0,35).
+```{r , echo=TRUE}
+muchos_cuantiles_exp<-rep(NA,Nrep)
+for (i in 1:Nrep){
+  muchos_cuantiles_exp[i]<-quantile(muchas_exp[1:i],probs = 0.9)
+}
+plot(1:i,muchos_cuantiles_exp, ylim = c(0,35))
+```
+5. Repetir los ıtems 2 a 4 Ngen = 10 veces, agregando al gr´afico anterior los cuantiles de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen) {
+  muchas_exp<-rexp(Nrep,0.1)
+  muchos_cuantiles_exp<-rep(NA,Nrep)
+for (i in 1:Nrep){
+  muchos_cuantiles_exp[i]<-quantile(muchas_exp[1:i],probs = 0.9)
+}
+  if(j==1){plot(1:Nrep, muchos_cuantiles_exp,ylim = c(0,35))}
+  else{
+  points(1:i,muchos_cuantiles_exp,ylim = c(0,35), col=j)
+  }
+} 
+```
+6. Indicar cual espera que sea el valor lımite de estas sucesiones. ¿Se condice con lo que muestra el grafico?
+
+## Histogramas
+
+Para cada uno de los modelos contemplados, realizar histogramas basados en Ngen = 100 replicaciones, considerando muestras de tamano n=5, n=30, n=100.
+
+Para simplificar, solo lo haremos para el modelo exp.
+
+### n=5
+```{r , echo=TRUE}
+lambda<-0.1
+n=5
+Ngen<- 100
+empi_dist_q<-rep(NA, Ngen)
+for (i in 1:Ngen){
+  mis_exponenciales <- rexp(n,lambda)
+  empi_dist_q[i]<- quantile(mis_exponenciales, 0.9)
+}
+
+hist(empi_dist_q, probability=TRUE)
+```
+### n=30
+```{r , echo=TRUE}
+lambda<-0.1
+n=30
+Ngen<- 100
+empi_dist_q<-rep(NA, Ngen)
+for (i in 1:Ngen){
+  mis_exponenciales <- rexp(n,lambda)
+  empi_dist_q[i]<- quantile(mis_exponenciales, 0.9)
+}
+
+hist(empi_dist_q, probability=TRUE)
+```
+### n=100
+```{r , echo=TRUE}
+lambda<-0.1
+n=100
+Ngen<- 100
+empi_dist_q<-rep(NA, Ngen)
+for (i in 1:Ngen){
+  mis_exponenciales <- rexp(n,lambda)
+  empi_dist_q[i]<- quantile(mis_exponenciales, 0.9)
+}
+
+hist(empi_dist_q, probability=TRUE)
+```

@@ -1,0 +1,239 @@
+---
+title: "Entrega 2  1/06 - Guia TP Estimadores de Maxima Verosimilitud"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Los Gamma-ray bursts (GRBs) son uno de los fenomenos mas exoticos de los que estudia la astronomıa moderna.
+
+# PARTE 1
+
+1. Estimar P(X<=40). Informar el error incertidumbre asociado.
+
+```{r , echo=TRUE}
+datos<-read.table("http://astrostatistics.psu.edu/datasets/GRB_afterglow.dat",
+           header=T, skip=1)
+
+attach(datos)
+
+#Calculo P(X<=40)
+proba40<-sum(f<=40)/length(f) #0.666
+
+#Para sacar error standard se hace Bootstrap no parametrico
+set.seed(123)
+N<-1000
+remuestreo<-rep(NA,N)
+for (i in 1:N){
+  datos_estrella<-sample(f,size = length(f),replace = TRUE)
+  remuestreo[i]<-sum(datos_estrella<=40)/length(datos_estrella)
+} 
+
+error_proba40<-sqrt(var(remuestreo)) #0.0596
+
+```
+
+2. Estimar el flux medio. Informar el standard error.
+
+```{r , echo=TRUE}
+flux_medio<-mean(f) #34.4429
+error_promedio<-sd(f)/sqrt(length(f)) #3.7137
+```
+
+3. #Estimar la mediana de flux. Informar el standard error
+
+```{r , echo=TRUE}
+mediana_flux<-median(f) #27.4
+
+#Bootstrap no parametrico
+N<-1000
+remuestreo<-rep(NA,N)
+for (i in 1:N){
+  datos_estrella<-sample(f,size = length(f),replace = TRUE)
+  remuestreo[i]<-median(datos_estrella)
+} 
+error_mediana<-sqrt(var(remuestreo)) #2.4438
+```
+
+4. #Estimar la varianza de flux. Informar el standard error
+
+```{r , echo=TRUE}
+var_flux<-var(f) #868.8771
+
+N<-1000
+remuestreo<-rep(NA,N)
+for (i in 1:N){
+  datos_estrella<-sample(f,size = length(f),replace = TRUE)
+  remuestreo[i]<-var(datos_estrella)
+} 
+
+error_varianza<-sqrt(var(remuestreo)) # 169.9854
+```
+
+5. Realizar un histograma para los datos flux. Los datos parecen tener alguna distribucion conocida? Explorar el comando density.
+
+```{r , echo=TRUE}
+hist(f, probability = TRUE)
+```
+
+#PARTE 2: Estimacion bajo modelo exponencial: E(λ)
+
+En tal caso, E(X) = 1/λ y V(X) = 1/λ2. Recordemos que, de la Ley de los Grandes Numeros, podemos deducir que λbn = 1/X¯n es un estimador consistente de λ. De hecho, se puede demostrar que este es tambien el estimador de m´axima verosimilitud.
+
+7. Estimar P(X ≤ 40) asumiendo que los datos provienen de una distribucion exponencial. Comparar con la estimaci´on obtenida en la Seccion 1. Informar el standard error (que tambien hemos llamado incertidumbre) asociado a esta estimacion.
+
+```{r , echo=TRUE}
+#Calculo estimador de lambda
+lambda<-1/mean(f) #0.029
+
+#Calculo proba asumiendo modelo exp y haciendo plug in de lambda
+proba40_exp<-pexp(40,rate = lambda) #0.6869
+
+#Estimador p tiene su propio error standard
+error_proba40_exp1<-sqrt((mean(f<=40)*(1-mean(f<=40)))/length(f))
+  
+#Bootstrap Parametrico
+set.seed(123)
+N<-1000
+remuestreo<-rep(NA,N)
+for (i in 1:N){
+  #Como asumo una distribucion no usamos mas sample, sino rexp 
+  datos_estrella<-rexp(length(f),rate = lambda)
+  #Para cada N, calculo el lambda nuevo de los datos y su proba 40
+  lambda<-1/mean(datos_estrella)
+  remuestreo[i]<-pexp(40,rate = lambda)
+} 
+
+error_proba40_exp<-sqrt(var(remuestreo)) #0.1878
+```
+
+8. Realizar un histograma para los datos de flux y superponer la funcion de  densidad exponencial con el parametro que considere pertinente.
+
+```{r , echo=TRUE}
+hist(f, probability = TRUE) 
+```
+
+9. Estimar el flux medio asumiendo que los datos provienen de una distribucion exponencial. Informar el standard error.
+
+```{r , echo=TRUE}
+promedio_exp<-mean(f) #34.4429
+error_promedio_exp<-sd(f)/sqrt(length(f)) #3.7137
+```
+
+10. Estimar la mediana de flux asumiendo que los datos provienen de una distribucion exponencial. Informar el standard error.
+
+```{r , echo=TRUE}
+lambda<-1/mean(f)
+mediana_exp<-log(2)/lambda #23.8740
+
+#Bootstrap parametrico
+N<-1000
+remuestreo<-rep(NA,N)
+for (i in 1:N){
+  datos_estrella<-rexp(length(f),lambda)
+  lambda<-1/mean(datos_estrella)
+  remuestreo[i]<-median(datos_estrella)
+} 
+error_mediana_exp<-sqrt(var(remuestreo)) #13.6094
+```
+
+11. Estimar la varianza de flux, asumiendo que los datos provienen de una distribucion exponencial. Informar el standard error.
+
+```{r , echo=TRUE}
+var_fluxexp<- 1/(lambda**2) #0.0123
+
+N<-1000
+remuestreo<-rep(NA,N)
+for (i in 1:N){
+  datos_estrella<-rexp(length(f),lambda)
+  remuestreo[i]<-mean(datos_estrella)**2
+} 
+error_varianzaexp<-sqrt(var(remuestreo)) #0.0031
+```
+
+#Error Cuadratico Medio
+
+Generaremos datos provenientes de una familia exponencial: X ∼ E(λ). Procuraremos estimar θ = P(X ≤ 40).
+
+12. Calcular E(X) y V(X).
+
+E(X)<-1/lambda
+V(X)<-1/lambda**2
+
+13. Obtenga una formula para el parametro de interes en funcion de λ.
+
+```{r , echo=TRUE}
+lambda<-1/mean(f)
+tita40<-1-exp(1)**(-lambda*40) #0.6869
+```
+14. De aqu´ı en mas consideraremos λ = 0,03. Utilizaremos θbn para denotar el estimador utilizado en la Parte 1, mientras que con θen denotamos el estimador obtenido en la Parte 2, asumiendo que los datos provienen de una distribucion exponencial.
+
+```{r , echo=TRUE}
+#Idem a hacer pexp(40,0.03)
+tita_verdad<-1-exp(1)**(-0.03*40) #0.6988
+```
+
+15. Representar en una tabla el error cuadratico medio empırico, ECME, de los estimadores θbn y θen para muestras de tamano n=50, n=150, n=200 y n=500, utilizando Nrep=1000 replicaciones en cada caso.
+¿Que estimador prefiere bajo este escenario?
+
+```{r , echo=TRUE}
+#Primer estimador. Tita sombrero
+lambda<-0.03
+
+set.seed(123)
+Nrep<-1000                      #Num de replicaciones
+n<-c(50,150,200,500)            #Vec con tamanos de las muestras
+ecm_sombrero<-rep(NA,length(n))
+
+for (j in 1:length(n)){
+  
+  tamano<-n[j]
+  empi_dist_tita<-rep(NA, Nrep)
+  diferencia<-rep(NA, Nrep)
+  
+  for (i in 1:Nrep){
+    
+    #Genero mis datos de tamano n
+    mis_exponenciales<-rexp(tamano,lambda)    
+    
+    #Para cada replica calculo proba40
+    empi_dist_tita[i]<-sum(mis_exponenciales<=40)/length(mis_exponenciales)  
+    
+    #Calculo dif entre la estimacion de cada replicacion y la verdad 
+    diferencia[i]<-((empi_dist_tita[i]-tita_verdad)^2) 
+  }
+  ecm_sombrero[j]<-sum((diferencia)/Nrep)
+}
+
+#Segundo estimador. Tita rulo
+ecm_rulo<-rep(NA,length(n))
+
+set.seed(123)
+for (j in 1:length(n)) {
+  
+  tamano<-n[j]
+  empi_dist_tita <- rep(NA, Nrep)
+  diferencia<-rep(NA, Nrep)
+  
+  for (i in 1:Nrep){
+    
+    #Genero mis datos de tamano n
+    mis_exponenciales<-rexp(tamano,lambda)
+    
+    #Para cada replica calculo proba40 exp con lambda estimado
+    empi_dist_tita[i]<-pexp(40,1/mean(mis_exponenciales))
+    
+    diferencia[i]<-((empi_dist_tita[i]-tita_verdad)^2)
+  }
+  ecm_rulo[j]<-sum((diferencia)/Nrep)
+}
+
+tabla_errores<-data.frame(n,ecm_sombrero,ecm_rulo)
+colnames(tabla_errores)<-c("Tamano muestra","ECM tita sombrero","ECM tita rulo")
+tabla_errores
+```

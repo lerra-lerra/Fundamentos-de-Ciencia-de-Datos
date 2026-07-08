@@ -1,0 +1,491 @@
+---
+title: "Estimacion puntual y por Intervalos"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Estimacion Puntual
+
+Sea (Xi)i≥1 una muestra aleatoria con distribuci´on F. Denotemos con X a un elemento
+con misma distribuci´on que Xi. 
+Asuma que estamos interesados en estimar el la probabilidad de que X sea mayor a uno: θ(F) := PF (X > 1).
+
+
+### Estimador 1:
+#### 1.1 
+Proponga un estimador θsomb consistente para θ(F) = PF (X > 1) (observar que aquı
+hacemos explıcito que θ depende de la distribuci´on F).
+
+```{r , echo=TRUE}
+# titasomb <- E(xi,xn) (tal que xi sea >1) / n
+```
+
+
+#### 1.2 
+Implemente una funcion estsombrero que tenga por argumento un conjunto de datos
+(x1, . . . , xn) muestra y devuelva el valor de la estimaci´on obtenida utilizando θsomb.
+```{r , echo=TRUE}
+# 1.2
+estimador_tita_somb <-function(datos){
+  sum(datos>1)/length(datos)
+}
+
+datos <- c(12.23,6.37, 6.10, 0.70, 3.48, 2.82, 9.55, 2.21, 0.72, 9.09)
+
+```
+
+1.3 Calcule el valor de θsomb en el siguiente conjunto de datos utilizando estsombrero:
+```{r , echo=TRUE}
+#1.3
+titasomb <- estimador_tita_somb(datos)
+```
+
+
+
+
+## Mundo Exponencial: Calentando motores
+#### 1.4 
+Sea X una variable aleatoria con distribucion F, exponencial de par´ametro λ = 0.2:
+X ∼ E(0.2). Indique el valor de
+```{r , echo=TRUE}
+
+#E(x) = 1/0.2  
+#V(x)= 1/(0.2)**2  
+#P(x) = 1-(1-exp(1)**(-0.2*1))
+
+lambda = 0.2
+proba <- 1- pexp(1,lambda) # porque la pexp va de -inf a el valor que indico
+```
+
+#### 1.5 
+Sea ahora X una variable aleatoria con distribucion F perteneciente a la familia exponencial: es decir, X ∼ E(λ) con λ DESCONOCIDO. Exprese cada uno de los siguientes
+objetos en funci´on de λ:
+```{r , echo=TRUE}
+
+# E(x) = 1/lambda  
+# V(x)= 1/(lambda)**2  
+# P(x) = 1-(1-exp(1)**(-lambda*1))
+
+lambdaestimado = 1/mean(datos)
+proba <- 1- pexp(1,lambdaestimado) # porque la pexp va de -inf a el valor que indico
+```
+
+## Mundo Exponencial: Haciendo Estadıstica
+Sean (Xi)i≥1 i.i.d., con misma distribuci´on que X. Asuma ahora que F pertenece a la
+familia exponencial; es decir, X ∼ E(λ), con λ DESCONOCIDO.
+
+#### 1.6
+Proponga un nuevo estimador θen consistente para θ(F) = PF (X > 1) bajo este nuevo
+escenario. Es decir, defina θen = fn(X1, . . . , Xn) de forma tal que
+θrulo = fn(X1, . . . , Xn)−→ e−λ cuando Xi ∼ E(λ) , ∀λ > 0.
+```{r , echo=TRUE}
+# P(x) = 1-(1-exp(1)**(-lambdaestimado*1))
+titarulo <- 1- pexp(1,lambdaestimado)
+```
+
+
+#### 1.7 
+Implemente una funcion estrulo que tenga por argumento un conjunto de datos 
+(x1, . . . , xn) y devuelva el valor de la estimacion obtenida utilizando θrulo
+```{r , echo=TRUE}
+estimador_tita_rulo<-function(df){
+  lamnbdaestim <- 1/mean(df)
+  1- pexp(1,lamnbdaestim)
+}
+```
+
+#### 1.8 
+Calcule el valor de θen en el siguiente conjunto de datos utilizando estrulo:
+```{r , echo=TRUE}
+estrulo <- estimador_tita_rulo(datos)
+```
+
+*Simulacion 1*:. A lo largo de esta simulacion generaremos variables con distribucion
+exponencial de parametro λ = 0.2.
+
+#### 1.9 
+Indique cual es el verdadero valor que estamos queriendo estimar: θ = P(X > 1),
+siendo X ∼ E(0.2).
+```{r , echo=TRUE}
+lambda <- 0.2
+tita_verdad <- 1- pexp(1,lambda) 
+```
+
+#### 1.10 
+Genere una muestra de tamano n=50 y calcule los dos estimadores.
+```{r , echo=TRUE}
+datitos <- rexp(50,lambda)
+```
+
+#### 1.11 
+Genere Nrep= 1000 muestras de tama˜no n=50 y guarde los valores de cada uno de
+los dos estimadores calculados en cada uno de los Nrep = 1000 conjuntos de datos.
+```{r , echo=TRUE}
+lambda <- 0.2
+nrep <- 1000
+muchos_est_somb<-rep(NA,nrep)
+muchos_est_rulo<-rep(NA,nrep)
+
+for (i in 1:nrep) {
+  datitos <- rexp(50,lambda)
+  muchos_est_somb[i]<- estimador_tita_somb(datitos)
+  muchos_est_rulo[i]<- estimador_tita_rulo(datitos)
+}
+```
+
+#### 1.12 
+Realice un histograma de cada uno de los estimadores propuestos con los valores
+obtenidos en el ıtem anterior. Comente los gr´aficos realizados. Indique que estimador
+prefiere en este escenario y explique a que atribuye sus bondades.
+```{r , echo=TRUE}
+hist(muchos_est_somb,probability = TRUE,breaks = 50,col=3)
+hist(muchos_est_rulo,probability = TRUE,breaks = 50,add=TRUE,col = 2)
+```
+
+1.13 Represente en una tabla el error cuadratico medio (estimado) de los estimadores θrulo y θsomb para muestras de tamano n=150, n=200, n=500 y n=1000, utilizando Nrep=1000 replicaciones en cada caso. ¿Que estimador prefiere bajo este escenario?
+
+```{r , echo=TRUE}
+#VERDAD
+set.seed(123)
+lambda <- 0.2
+
+#Primer estimador. Tita sombrero
+lambda<-0.2
+tita_verdad <- 1- pexp(1,lambda) 
+
+Nrep<-1000 #Num de replicaciones
+n<-c(150,200,500,1000) #Vec con tamanos de las muestras
+ecm_sombrero<-rep(NA,length(n))
+
+for (j in 1:length(n)){
+  tamano<-n[j] # tamaño de n
+  empi_dist_tita<-rep(NA, Nrep)
+  diferencia<-rep(NA, Nrep)
+  for (i in 1:Nrep){
+    #Genero mis datos de tamano n
+    mis_exponenciales<-rexp(tamano,lambda)
+    #Para cada replica calculo proba40
+    empi_dist_tita[i]<- estimador_tita_somb(mis_exponenciales)
+    #Calculo dif entre la estimacion de cada replicacion y la verdad
+    diferencia[i]<-((empi_dist_tita[i]-tita_verdad)^2)
+  }
+  ecm_sombrero[j]<-sum((diferencia)/Nrep)
+}
+#Segundo estimador. Tita rulo
+ecm_rulo<-rep(NA,length(n))
+set.seed(123)
+for (j in 1:length(n)) {
+  tamano<-n[j]
+  empi_dist_tita <- rep(NA, Nrep)
+  diferencia<-rep(NA, Nrep)
+  for (i in 1:Nrep){
+    #Genero mis datos de tamano n
+    mis_exponenciales<-rexp(tamano,lambda)
+    #Para cada replica calculo proba40 exp con lambda estimado
+    empi_dist_tita[i]<-estimador_tita_rulo(mis_exponenciales)
+    diferencia[i]<-((empi_dist_tita[i]-tita_verdad)^2)
+  }
+  ecm_rulo[j]<-sum((diferencia)/Nrep)
+}
+
+tabla_errores<-data.frame(n,ecm_sombrero,ecm_rulo)
+colnames(tabla_errores)<-c("Tamano muestra","ECM tita sombrero","ECM tita rulo")
+tabla_errores
+```
+
+## Mundo Normal: Ojo al Piojo! 
+Considere ahora variables aleatorias Xi
+i.i.d. con distribuci´on normal de media µ = 1/0.2 y σ2 = 1/0.2**2
+#### 1.14
+Calcule la probabilidad de que Xi supere el valor 1: P(Xi > 1)
+```{r , echo=TRUE}
+mu <- 1/0.2
+sigmacuad <- 1/(0.2)**2
+sigma <- sqrt(sigmacuad)
+
+proba1_normal <- 1- pnorm(1,mu,sigma)
+```
+
+#### 1.15
+Calcule el valor de cada uno de los siguientes l´ımites:
+limn→∞ θsomb(X1, . . . , Xn) = ...... , 
+limn→∞θrulo(X1, . . . , Xn) = ......
+
+```{r , echo=TRUE}
+
+```
+#### 1.16 
+Proponga un nuevo estimador θ∗n = θ∗n(X1, · · · , Xn) para θ(F) = PF (Xi > 1), asumiendo ahora que F pertenece a la normal: Xi ∼ N (µ, σ2).
+```{r , echo=TRUE}
+mu_estim <- mean(datos)
+sigma_estim <- sd(datos)
+proba2_normal_estim <- 1- pnorm(1,mu_estim,sigma_estim) 
+```
+
+  
+*Simulacion 2*:
+A lo largo de esta simulaci´on generaremos variables con distribucion
+normal de media µ = 1/0.2 y σ2 = 1/0.2**2
+
+Represente en una tabla el error cuadr´atico medio (estimado) de los estimadores θbn, θen y θ∗n para muestras de tama˜no n=150, n=200,n=500 y n=1000, 
+utilizando Nrep=1000 replicaciones en cada caso. 
+Analice los resultados obtenidos y explique que estimador elegir´ıa bajo este escenario.
+
+```{r , echo=TRUE}
+#VERDAD
+set.seed(123)
+mu <- 1/0.2
+sigmacuad <- 1/(0.2)**2
+sigma <- sqrt(sigmacuad)
+tita_verdad <- 1- pnorm(1,mu,sigma) 
+
+estimador_tita_somb <-function(datos){
+  sum(datos>1)/length(datos)
+}
+
+estimador_tita_rulo<-function(df){
+  lamnbdaestim <- 1/mean(df)
+  1- pexp(1,lamnbdaestim)
+}
+
+estimador_tita_estrella<-function(datos){
+  mu1 <- mean(datos)
+  sigma1 <- sd(datos)
+  1- pnorm(1,mu1,sigma1)
+}
+
+
+#Primer estimador. Tita sombrero
+Nrep<-1000 #Num de replicaciones
+n<-c(150,200,500,1000) #Vec con tamanos de las muestras
+ecm_sombrero<-rep(NA,length(n))
+
+for (j in 1:length(n)){
+  tamano<-n[j] # tamaño de n
+  empi_dist_tita<-rep(NA, Nrep)
+  diferencia<-rep(NA, Nrep)
+  for (i in 1:Nrep){
+    #Genero mis datos de tamano n
+    mis_normales<-rnorm(tamano,mu,sigma)
+    #Para cada replica calculo proba
+    empi_dist_tita[i]<- estimador_tita_somb(mis_normales)
+    #Calculo dif entre la estimacion de cada replicacion y la verdad
+    diferencia[i]<-((empi_dist_tita[i]-tita_verdad)^2)
+  }
+  ecm_sombrero[j]<-sum((diferencia)/Nrep)
+}
+
+
+#Segundo estimador. Tita rulo
+ecm_rulo<-rep(NA,length(n))
+set.seed(123)
+for (j in 1:length(n)) {
+  tamano<-n[j]
+  empi_dist_tita <- rep(NA, Nrep)
+  diferencia<-rep(NA, Nrep)
+  for (i in 1:Nrep){
+    #Genero mis datos de tamano n
+    mis_normales<-rnorm(tamano,mu,sigma)
+    #Para cada replica calculo proba40 exp con lambda estimado
+    empi_dist_tita[i]<-estimador_tita_rulo(mis_normales)
+    diferencia[i]<-((empi_dist_tita[i]-tita_verdad)^2)
+  }
+  ecm_rulo[j]<-sum((diferencia)/Nrep)
+}
+
+
+#Tercer estimador. Tita estrella
+ecm_estrella<-rep(NA,length(n))
+set.seed(123)
+for (j in 1:length(n)) {
+  tamano<-n[j]
+  empi_dist_tita <- rep(NA, Nrep)
+  diferencia<-rep(NA, Nrep)
+  for (i in 1:Nrep){
+    #Genero mis datos de tamano n
+    mis_normales<-rnorm(tamano,mu,sigma)
+    #Para cada replica calculo proba40 exp con lambda estimado
+    empi_dist_tita[i]<-estimador_tita_estrella(mis_normales)
+    diferencia[i]<-((empi_dist_tita[i]-tita_verdad)^2)
+  }
+  ecm_estrella[j]<-sum((diferencia)/Nrep)
+}
+
+
+tabla_errores<-data.frame(n,ecm_sombrero,ecm_rulo,ecm_estrella)
+colnames(tabla_errores)<-c("Tamano muestra","ECM tita sombrero","ECM tita rulo","ECM tita estrella")
+tabla_errores
+
+```
+
+
+
+## Estimaci´on por Intervalos
+El objetivo de este ejercicio es comparar emp´ıricamente la performance de diferentes intervalos de confianza, basados en estimadores asint´oticamente normales. Por un lado, utilizaremos intervalos construidos estimando la varianza asint´otica mediante (i) boostrap y (ii) propagaci´on de errores Finalmente, construiremos (iii) intervalos para una proporci´on, siendo que el parametro de interes es una probabilidad. 
+Estudiaremos el nivel de cubrimiento empırico y la longitud media de cada uno procedimientos mencionados.
+Recordemos que el valor de interes es θ = P(X > 1).
+Generaremos datos asumiendo que provienen de una familia exponencial E(λ):X ∼ E(λ), co
+λ = 0.2
+
+#### 1. 
+Obtenga una formula para el parametro de interes en funci´on de λ, que permita calcular la varianza asint´otica del estimador θen (propuesto en el punto 1.6) utilizando
+propagacion de errores.
+
+#### 2. 
+Construir los siguientes tres posibles intervalos de confianza asintoticos para el parametro de interes, con nivel 0.95
+
+##### (a) 
+Intervalos asintoticamente normal basado en θbn, propuesto en el item 1.1, considerando que se trata de un estimador para una probabilidad (es decir, no deja de ser un pb).
+```{r , echo=TRUE}
+
+# Verdad
+lambda<-0.2
+tita_verdad <- 1- pexp(1,lambda) 
+
+# 1.1
+estimador_p <-function(datos){
+  sum(datos>1)/length(datos)
+}
+
+cantidad_intervalos <- 1000
+resultados_esta <- c()
+
+for (i in 1:cantidad_intervalos){
+n_exp = 50
+mis_exp <-rexp(n_exp,0.2) 
+estimador <-estimador_p(mis_exp)
+error_estimador <- sqrt((estimador*(1-estimador))/length(n_exp))
+
+alfa<-0.05
+factor<-qnorm(1-alfa/2)
+intervalo_1 <- estimador - factor*error_estimador
+intervalo_2 <- estimador + factor*error_estimador
+esta<- intervalo_1<=tita_verdad & tita_verdad<=intervalo_2
+resultados_esta <- c(resultados_esta,esta)
+}
+mean(resultados_esta)
+```
+
+
+
+##### (b) 
+Intervalos asint´oticamente normal basado en θen, propuesto en el item 1.6, estimando la varianza asint´otica con propagaci´on de errores.
+
+##### (c) 
+Intervalos asint´oticamente normal basado en θen, propuesto en el item 1.6, estimando la varianza asint´otica con Bootstrap, utilizando N boot = 2000.
+```{r , echo=TRUE}
+lambda<-0.2
+tita_verdad <- 1- pexp(1,lambda) 
+
+# 1.1
+estimador_tita_somb <-function(datos){
+  sum(datos>1)/length(datos)
+}
+
+cantidad_intervalos <- 1000
+resultados_esta <- c()
+
+for (i in 1:cantidad_intervalos){
+n_exp = 100
+lambda = 0.2
+mis_exp <-rexp(n_exp,lambda) 
+tita_somb <-estimador_tita_somb(mis_exp)
+# Bootstrap
+nboot<-1000
+remuestreo<-rep(NA,n_exp)
+for (i in 1:nboot){
+  datos_estrella<- rexp(n_exp,lambda)
+  remuestreo[i]<-estimador_tita_somb(datos_estrella)
+}
+error_varianza<-sqrt(var(remuestreo)) # 
+
+alfa<-0.05
+factor<-qnorm(1-alfa/2)
+intervalo_1 <- tita_somb - factor*error_varianza
+intervalo_2 <- tita_somb + factor*error_varianza
+esta<- intervalo_1<=tita_verdad & tita_verdad<=intervalo_2
+resultados_esta <- c(resultados_esta,esta)
+}
+mean(resultados_esta)
+```
+
+
+#### 3. Genere datos utilizando λ = 0.2. Considere n = 100, 200, 500 y estudie el nivel de
+cubrimiento empırico en Nrep = 1000 replicaciones de los intervalos propuestos. Recuerde que el cubrimiento emp´ırico calcula la proporci´on de veces que el intervalo
+simulado atrapa al valor de inter´es.
+
+```{r , echo=TRUE}
+
+lambda<-0.2
+tita_verdad <- 1- pexp(1,lambda) 
+
+# 1.1
+estimador_tita_somb <-function(datos){
+  sum(datos>1)/length(datos)
+}
+
+cubrimiento_enes <- c()
+enes <- c(100,200,500)
+for (n_exp in enes){
+cantidad_intervalos <- 1000
+resultados_esta <- c() # cubrimiento empirico
+
+for (i in 1:cantidad_intervalos){
+lambda = 0.2
+mis_exp <-rexp(n_exp,lambda) 
+tita_somb <-estimador_tita_somb(mis_exp)
+# Bootstrap
+nboot<-500
+remuestreo<-rep(NA,n_exp)
+for (i in 1:nboot){
+  datos_estrella<- rexp(n_exp,lambda)
+  remuestreo[i]<-estimador_tita_somb(datos_estrella)
+}
+error_varianza<-sqrt(var(remuestreo)) # 1/lambda**2
+
+alfa<-0.05
+factor<-qnorm(1-alfa/2)
+intervalo_1 <- tita_somb - factor*error_varianza
+intervalo_2 <- tita_somb + factor*error_varianza
+esta<- intervalo_1<=tita_verdad & tita_verdad<=intervalo_2
+resultados_esta <- c(resultados_esta,esta)
+}
+cubrimiento_enes <- c(cubrimiento_enes,mean(resultados_esta))
+}
+
+
+tabla_errores<-data.frame(enes,cubrimiento_enes)
+colnames(tabla_errores)<-c("N","Cubrimiento")
+tabla_errores
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

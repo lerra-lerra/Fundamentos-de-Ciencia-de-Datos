@@ -1,0 +1,352 @@
+---
+title: "Ley de los Grandes Numeros - Simulaciones"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+El principal objetivo de esta guıa es explorar empıricamente cual es el comportamiento del promedio de variables aleatorios independientes, 
+identicamente distribuidas; en adelante, iid. Mas especıficamente, 
+consideraremos Xi ∼ F y generaremos Nrep datos con la distribucion F. Luego compararemos promedios con esperanzas y frecuencias relativas con probabilidades.
+
+# 1. Simulaciones
+
+## 1.1 Distribucion Bernoullie
+
+Sean Xi ∼ Be(p) siendo p = 0, 2. Utilizaremos X para denotar de manera generica una variable con esta misma distribucion.
+
+1. ¿Cuanto vale E(X)?
+
+E(X)=mu=p=0.2
+Var(X)= p(1-p)
+
+2. Guardar en el vector muchas bernoullies, Nrep = 1000 datos con distribucion Be(p) siendo p = 0, 2, utilizando el comando rbinom() (tener precaucion con los parametros que utiliza esta funcion leyendo antes el help(rbinom)).
+
+```{r , echo=TRUE}
+
+p<-0.2
+Nrep<-1000
+
+#Generamos muchos exp Be con comando rbinom 
+muchas_bernoullies<-rbinom(n=Nrep, size = 1, p) #Vector con 1s o 0s
+
+```
+3. Guardar en el vector muchos promedios bernoullies el promedio de las primeras n observaciones con n = 1, . . . , Nrep.
+4. Graficar n (en el eje x) versus el promedio de los primeros n datos. Utilizar ylim=c(0,1).
+
+```{r , echo=TRUE}
+
+#Calculamos la frecuencia acumulada
+muchos_promedios_bernoullies<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+    muchos_promedios_bernoullies[i]<-mean(muchas_bernoullies[0:i])
+}
+
+#Graficamos frec acumulada en funcion de 1:nrep
+plot(1:Nrep, muchos_promedios_bernoullies,ylim = c(0,1), cex=0.5)
+
+```
+
+5. Repetir los ´ıtems 2-4 Ngen = 10 veces, agregando al grafico anterior los promedios de cada individuo en un color diferente.
+
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen){
+  muchas_bernoullies<-rbinom(n=Nrep, size = 1, p)
+  muchos_promedios_bernoullies<-rep(NA,Nrep)
+    for (i in 1:Nrep) {
+      muchos_promedios_bernoullies[i]<-mean(muchas_bernoullies[0:i])
+    }
+  if(j==1){plot(1:Nrep, muchos_promedios_bernoullies,ylim = c(0,1), cex=0.5)}
+  else{
+#Points agrega puntos a un mismo plot que ya arme antes 
+   points(1:Nrep, muchos_promedios_bernoullies,ylim = c(0,1),col=j)
+  }
+}
+```
+6. Analizando el grafico, ¿cual parece ser el valor lımite de estas sucesiones?
+El valor limite de estas sucesiones parece ser 0.2, que es justamente la esperanza o mu de la distribucion.
+
+## 1.1 Distribucion Uniforme
+
+Sean Xi ∼ U(a, b) siendo a = 67, b = 73. Utilizaremos X para denotar de manera generica una variable con esta misma distribucion.
+
+### Promedios y Esperanzas
+1. ¿Cuanto vale E(X)?
+
+E(X)=(a+b)/2=70
+Var(X)=(b-a)**2/12
+
+2. Guardar en el vector muchas uniformes, Nrep = 1000 datos con distribucion 
+U(a, b) siendo a = 67, b = 73, utilizando el comando runif(). Realizar un histograma con los valores asignados a muchas uniformes; ¿se condice el histograma con lo que la densidad uniforme?
+```{r , echo=TRUE}
+
+#Generamos datos random
+muchas_uniformes<-runif(n=Nrep,67,73)
+hist(muchas_uniformes)
+
+```
+3. Guardar en el vector muchos promedios uniformes el promedio de las primeras n
+observaciones con n = 1, . . . , Nrep.
+4. Graficar n (en el eje x) versus el promedio de los primeros n datos. Utilizar ylim=c(65,75).
+```{r , echo=TRUE}
+
+#Quiero calcular la frecuencia acumulada
+muchos_promedios_uniformes<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchos_promedios_uniformes[i]<-mean(muchas_uniformes[0:i])
+}
+
+#Graficamos muchos promedios uniformes en funcion de 1:NREP
+plot(1:Nrep, muchos_promedios_uniformes,ylim = c(67,73))
+
+```
+5. Repetir los ıtems 2-4 Ngen = 10 veces, agregando al grafico anterior los promedios de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen){
+  muchas_uniformes<-runif(n=Nrep,67,73)
+  muchos_promedios_uniformes<-rep(NA,Nrep)
+    for (i in 1:Nrep) {
+      muchos_promedios_uniformes[i]<-mean(muchas_uniformes[0:i])
+    }
+  if(j==1){plot(1:Nrep, muchos_promedios_uniformes,ylim = c(67,73))}
+  else{
+#Points agrega puntos a un mismo plot que ya arme antes 
+   points(1:Nrep, muchos_promedios_uniformes,ylim = c(67,73),col=j)
+  }
+}
+```
+6. Analizando el grafico, ¿cual parece ser el valor lımite de estas sucesiones?
+El valor limite de estas sucesiones parece ser justamente la esperanza de X o mu.
+
+### Frecuencias Relativas y Probabilidades
+7. ¿Cuanto vale P(68 ≤ X ≤ 72)?
+En el caso de la distribucion uniforme, sabemos que el area del rectangulo que se forma es 1 y la base del mismo es 6.
+Si conocemos el area y la base podremos conocer la altura (area/base) = 1/6.
+Sin embargo, queremos conocer cuanto vale P(68 ≤ X ≤ 72), osea el area.
+```{r , echo=TRUE}
+altura<-1/6
+base<-4
+area = base * altura #0.666
+```
+8. Guardar en el vector muchas uniformes, Nrep = 1000 datos con distribucion 
+U(a, b) siendo a = 67, b = 73, utilizando el comando runif().
+```{r , echo=TRUE}
+muchas_uniformes<-runif(Nrep,67,73)
+```
+9. Guardar en el vector muchos frec rel uniformes la frecuencia relativa con la cual el dato aparece en el intervalo pedido (68, 72) a lo largo de las primeras 
+n observaciones, con n = 1, . . . , Nrep.
+```{r , echo=TRUE}
+muchas_frec_rel_uniformes<-rep(NA,Nrep)
+for (i in 1:Nrep){
+muchas_frec_rel_uniformes[i]<-sum(muchas_uniformes[0:i]>=68 &                                         muchas_uniformes[0:i]<=72)/i
+}
+```
+10. Graficar n (en el eje x) versus la frecuencia relativa de los primeros n datos. Utilizar ylim=c(0,1). 
+```{r , echo=TRUE}
+plot(1:Nrep,muchas_frec_rel_uniformes,ylim = c(0,1))  
+```
+11. Repetir los ıtems 2-4 Ngen = 10 veces, agregando al grafico anterior las frecuencias relativas de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen){
+  muchas_uniformes<-runif(n=Nrep,67,73)
+  muchas_frec_rel_uniformes<-rep(NA,Nrep)
+    for (i in 1:Nrep) {
+      muchas_frec_rel_uniformes[i]<-sum(muchas_uniformes[0:i]>=68 &                                         muchas_uniformes[0:i]<=72)/i
+    }
+  if(j==1){plot(1:Nrep, muchas_frec_rel_uniformes,ylim = c(0,1))}
+  else{
+#Points agrega puntos a un mismo plot que ya arme antes 
+   points(1:Nrep, muchas_frec_rel_uniformes,ylim = c(0,1),col=j)
+  }
+}
+```
+12. Analizando el grafico, ¿cual parece ser el valor lımite de estas sucesiones?
+Nuevamente, el valor limite de estas sucesiones tiende al valor calculado anteriormente ("la verdad").
+
+## 1.3. Distribucion Normal
+Sean Xi ∼ N (µ, σ2) siendo µ = 70, σ2 = 1,2. Utilizaremos X para denotar de manera generica una variable con esta misma distribucion.
+
+### Promedios y Esperanzas
+
+1. ¿Cuanto vale E(X)?
+
+En distribucion normal, E(X)=mu=promedio=70 y Var(X)=σ2
+
+2. Guardar en el vector muchas normales, Nrep = 1000 datos con distribucion
+N (µ, σ2) siendo µ = 70 y σ2 = 1,2, utilizando el comando rnorm(). Realizar un histograma con los valores asignados a muchas normales; ¿se condice el 
+histograma con lo que la densidad normal?
+```{r , echo=TRUE}
+muchas_normales<-rnorm(1000,70,sqrt(1.2))
+hist(muchas_normales)
+```
+3. Guardar en el vector muchos promedios normales el promedio de las primeras n observaciones, con n = 1, . . . , Nrep.
+4. Graficar n (en el eje x) versus el promedio de los primeros n datos. Utilizar ylim=c(60,80).
+```{r , echo=TRUE}
+muchos_promedios_normales<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+    muchos_promedios_normales[i]<-mean(muchas_normales[0:i])
+}
+plot(1:Nrep,muchos_promedios_normales,ylim = c(60,80))
+```
+5. Repetir los ıtems 2-4 Ngen = 10 veces, agregando al grafico anterior los promedios de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen){
+  muchas_normales<-rnorm(1000,70,sqrt(1.2))
+  muchos_promedios_normales<-rep(NA,Nrep)
+    for (i in 1:Nrep) {
+      muchos_promedios_normales[i]<-mean(muchas_normales[0:i])
+    }
+  if(j==1){plot(1:Nrep, muchos_promedios_normales,ylim = c(60,80))}
+  else{
+#Points agrega puntos a un mismo plot que ya arme antes 
+   points(1:Nrep, muchos_promedios_normales,ylim = c(60,80),col=j)
+  }
+}
+```
+6. Analizando el grafico, ¿cual parece ser el valor lımite de estas sucesiones?
+Idem respuestas anteriores, converge a la esperanza.
+
+### Frecuencias Relativas y Probabilidades
+7. ¿Cuanto vale P(68 ≤ X ≤ 72)?
+```{r , echo=TRUE}
+mu<-70
+sigma_cuad<-1.2
+proba_normal<-pnorm(72,mu,sqrt(sigma_cuad))-pnorm(68,mu,sqrt(sigma_cuad)) #0.93
+```
+8. Guardar en el vector muchas normales, Nrep = 1000 datos con distribucion N
+(µ, σ2) siendo µ = 70 y σ 2 = 1,2, utilizando el comando rnorm().
+```{r , echo=TRUE}
+muchas_normales<-rnorm(Nrep,mu,sqrt(sigma_cuad))
+```
+9. Guardar en el vector muchos frec rel normales la frecuencia relativa con la cual el dato aparece en el intervalo pedido (68, 72) a lo largo de las primeras n observaciones, con n = 1, . . . , Nrep.
+10. Graficar n (en el eje x) versus la frecuencia relativa de los primeros n datos. Utilizar ylim=c(0,1).
+```{r , echo=TRUE}
+muchas_fre_rel_normales<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchas_fre_rel_normales[i]<-sum(muchas_normales[0:i]>=68 &    
+                                  muchas_normales[0:i]<=72)/i
+}
+plot(1:Nrep,muchas_fre_rel_normales,ylim = c(0,1))
+```
+11. Repetir los ıtems 2-4 Ngen = 10 veces, agregando al grafico anterior las frecuencias relativas de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen){
+  muchas_normales<-rnorm(1000,70,sqrt(1.2))
+  muchas_fre_rel_normales<-rep(NA,Nrep)
+    for (i in 1:Nrep) {
+      muchas_fre_rel_normales[i]<-sum(muchas_normales[0:i]>=68 &    
+                                  muchas_normales[0:i]<=72)/i
+    }
+  if(j==1){plot(1:Nrep, muchas_fre_rel_normales,ylim = c(0,1))}
+  else{
+#Points agrega puntos a un mismo plot que ya arme antes 
+   points(1:Nrep, muchas_fre_rel_normales,ylim = c(0,1),col=j)
+  }
+}
+```
+12. Analizando el grafico, ¿cual parece ser el valor lımite de estas sucesiones?
+La frec relativa converge a la probabilidad.
+
+## 1.4. Distribucion Exponencial
+
+Sean Xi ∼ E(λ) siendo λ = 1/10. Utilizaremos X para denotar de manera generica una variable con esta misma distribucion.
+
+###Promedios y Esperanzas
+
+1. ¿Cuanto vale E(X)?
+
+Para una distribucion exponencial, E(X)= 1/lambda=10 y Var(X)=1/lambda**2
+
+2. Guardar en el vector muchas exponenciales, Nrep = 1000 datos con distribucion
+E(λ) siendo λ = 1/10, utilizando el comando rexp(). Realizar un histograma con los valores asignados a muchas exponenciales; ¿se condice el histograma con lo que la densidad exponencial?
+```{r , echo=TRUE}
+muchas_exponenciales<-rexp(Nrep,0.1)
+hist(muchas_exponenciales)
+```
+3. Guardar en el vector muchos promedios exponenciales el promedio de las primeras observaciones, con n = 1, . . . , Nrep.
+4. Graficar n (en el eje x) versus el promedio de los primeros n datos. Utilizar ylim=c(0,20).
+```{r , echo=TRUE}
+muchos_promedios_exponenciales<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchos_promedios_exponenciales[i]<-mean(muchas_exponenciales[0:i])
+}
+plot(1:Nrep,muchos_promedios_exponenciales,ylim = c(0,20))
+```
+5. Repetir los ´ıtems 2-4 Ngen = 10 veces, agregando al gr´afico anterior los promedios de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen){
+  muchas_exponenciales<-rexp(Nrep,0.1)
+  muchos_promedios_exponenciales<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchos_promedios_exponenciales[i]<-mean(muchas_exponenciales[0:i])
+  }
+  if(j==1){plot(1:Nrep, muchos_promedios_exponenciales,ylim = c(0,20))}
+  else{
+    #Points agrega puntos a un mismo plot que ya arme antes 
+    points(1:Nrep, muchos_promedios_exponenciales,ylim = c(0,20),col=j)
+  }
+}
+```
+6. Analizando el grafico, ¿cual parece ser el valor lımite de estas sucesiones?
+Converge a la esperanza de X.
+
+### Frecuencias Relativas y Probabilidades
+
+7. ¿Cuanto vale P(X ≥ 12)?
+
+En distribucion exponencial, P(X<=x) = 1 - exp**(-lambda x)
+```{r , echo=TRUE}
+proba_exp<-1-(1-exp(1)**(-0.1*12)) #0.3012
+proba_exp2<-1-pexp(12,rate = 0.1) #0.3012 Misma manera calculando con comando R
+```
+8. Guardar en el vector muchas exponenciales, Nrep = 1000 datos con distribucion
+E(λ) siendo λ = 1/10, utilizando el comando rexp().
+```{r , echo=TRUE}
+muchas_exponenciales<-rexp(Nrep,0.1)
+```
+9. Guardar en el vector muchos frec rel exponenciales la frecuencia relativa con la cual el dato aparece en el intervalo pedido (−∞, 12) a lo largo de las primeras n observaciones, con n = 1, . . . , Nrep.
+10. Graficar n (en el eje x) versus la frecuencia relativa de los primeros n datos. Utilizar ylim=c(0,1).
+```{r , echo=TRUE}
+muchas_fre_rel_exponenciales<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchas_fre_rel_exponenciales[i]<-sum(muchas_exponenciales[0:i]<=12)/i
+}
+plot(1:Nrep,muchas_fre_rel_exponenciales,ylim = c(0,1))
+```
+11. Repetir los ıtems 2-4 Ngen = 10 veces, agregando al grafico anterior las frecuencias relativas de cada individuo en un color diferente.
+```{r , echo=TRUE}
+Ngen<-10
+for (j in 1:Ngen){
+  muchas_exponenciales<-rexp(Nrep,0.1)
+  muchas_fre_rel_exponenciales<-rep(NA,Nrep)
+for (i in 1:Nrep) {
+  muchas_fre_rel_exponenciales[i]<-sum(muchas_exponenciales[0:i]<=12)/i
+  }
+  if(j==1){plot(1:Nrep, muchas_fre_rel_exponenciales,ylim = c(0,1))}
+  else{
+    #Points agrega puntos a un mismo plot que ya arme antes 
+    points(1:Nrep, muchas_fre_rel_exponenciales,ylim = c(0,1),col=j)
+  }
+}
+```
+12. Analizando el grafico, ¿cual parece ser el valor lımite de estas sucesiones?
+La frecuencia relativa converge a la probabilidad.
+
+## Ley de los Grandes Numeros: El Teorema
+
+La Ley de los Grandes Numeros establece que promedio de tita converge a la esperanza de tita, donde tita de i con i>=1 son variables aleatoria i.i.d. 
+
+En particular, si las variables tienen distribucion Bernoulli, obtenemos que la frecuencia relativa de exitos converge a su probabilidad.Invocando la Ley de los Grandes Numeros, tambien tenemos que la frecuencia relativa converge a la probabilidad.
+
+

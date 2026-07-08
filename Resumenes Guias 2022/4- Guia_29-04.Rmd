@@ -1,0 +1,420 @@
+---
+title: "29-04 Aves y Clasificacion"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Parte A
+Las aves parasitas de crÄ±a ponen huevos en nidos de otras especies (hospedador), las
+cuales incuban los huevos y crÄ±an al pichon parasito. En un bosque de talas de la provincia
+de Buenos Aires hay dos especies hospederas que son indistinguibles a simple vista. Una
+de las principales diferencias entre estas especies radica en el grado de discriminacion y
+remocion de huevos parasitos de sus nidos. Una de las especies es aceptadora de huevos
+parasitos (Y = 0), ya que remueve del nido solo el 30% de los huevos parasitos, mientras
+que la otra especie es rechazadora (Y = 1) ya que remueve el 80% de los huevos parasitos
+presentes en su nido. Ademas, se sabe que el 90% de los nidos del bosque corresponden
+a la especie aceptadora , mientras que apenas el 10% restante son nidos de la especie
+rechazadora?.
+
+### Calculo de probabilidades:
+Se elige al azar un nido del bosque y se colocan k = 8
+huevos parasitos. Denotemos con X a la variable aleatoria que indica el numero de huevos
+removidos del nido. Asuma que, en cada nido, la remocion (o no) de los diferentes huevos
+se realiza de manera independiente.
+
+#### 1. 
+Calcule la probabilidad de que 5 de los huevos parasitos sean removidos del nido si se
+sabe que el nido parasitado es de la especie aceptadora.
+
+```{r }
+#rechazadora y=0
+py0 = 0.9
+pr0 = 0.3
+
+# aceptadora
+py1 = 0.1
+pr1 = 0.8 #prob de rechazar un huevo dado que soy acep
+
+# Ej 1
+dbinom(5,8,pr0)
+```
+
+#### 2. 
+Calcule la probabilidad de que x de los huevos ajenos sean removidos del nido si se
+sabe que el nido parasitado es de la especie aceptadora, para 0 menor igual x menorigual 8, y represente las probabilidades calculadas en un diagrama de barras. Incluya un titulo pertinente en el grafico.
+
+```{r }
+proba_aceptadora<-rep(0,9)
+for (i in 0:8) {
+  proba_aceptadora[i+1]<-dbinom(i,8,pr0)
+}
+
+
+huevos_removidos<-c(0,1,2,3,4,5,6,7,8)
+# proba_aceptadora<-c(0.0576,0.1976,0.2965,0.2541,0.1361,0.0466,0.01,0.0647,0.00006)
+
+df1<-data.frame(huevos_removidos,proba_aceptadora)
+library(ggplot2)
+ggplot(data = df1,
+       aes(x=huevos_removidos,
+           y=proba_aceptadora)) +
+      geom_bar(stat = "identity", position = "stack",
+               color="black") +
+      coord_cartesian(ylim=c(0, 0.5),
+                      xlim = c(0,8)) +
+      labs(title = "Probabilidad de X entre especie aceptadora")+
+      xlab("Cantidad de huevos removidos")+
+      ylab("Probabilidad")
+```
+
+#### 3. 
+Calcule la probabilidad de que 5 de los huevos parasitos sean removidos del nido si se
+sabe que el nido parasitado es de la especie rechazadora.
+```{r }
+dbinom(5,8,pr1)
+```
+dbinom(5,8,pr1)
+
+
+#### 4. 
+Calcule la probabilidad de que x de los huevos parasitos sean removidos del nido si se
+sabe que el nido parasitado es de la especie rechazadora, para 0 menor igual x menorigual 8, y representa
+las probabilidades calculadas en un diagrama de barras. 
+Incluya un tÄ±tulo pertinente en el grafico.
+```{r }
+proba_rechazadora<-rep(0,9)
+for (i in 0:8) {
+  proba_rechazadora[i+1]<-dbinom(i,8,pr1)
+}
+
+huevos_removidos<-c(0,1,2,3,4,5,6,7,8)
+# proba_rechazadora<-c(0,0.00008,0.00114,0.00917,0.045875,0.1468,0.2936,0.3355,0.1677)
+
+df2<-data.frame(huevos_removidos,proba_rechazadora)
+
+ggplot(data = df2,
+      aes(x=huevos_removidos,
+          y=proba_rechazadora)) +
+  geom_bar(stat = "identity", position = "stack",color="red") +
+  coord_cartesian(ylim=c(0, 0.5),
+                  xlim = c(0,8)) +
+  labs(title = "Probabilidad de X entre especie rechazadora")+
+  xlab("Cantidad de huevos removidos")+
+  ylab("Probabilidad")
+# Haga la tabla de la funcion de probabilidad conjunta del vector (X, Y )
+df3<-data.frame(huevos_removidos,proba_aceptadora,proba_rechazadora)
+```
+#### 5. 
+Calcule la probabilidad de que 5 de los huevos parasitos sean removidos del nido.
+
+cuaderno
+```{r }
+# Cuaderno
+# Y=0 Aceptador
+pY0=0.90
+pr0=0.30
+
+# Y=1 Rechazador
+pY1=0.10
+pr1=0.80
+dbinom(5,8,pr1)* pY1+ dbinom(5,8,pr0)*pY0
+```
+
+
+
+#### 6. 
+Calcule la probabilidad de que x de los huevos parasitos sean removidos del nido, para 0 <= x <= 8, y represente las probabilidades calculadas en un diagrama de barras.
+Incluya un titulo pertinente en el grafico.
+```{r }
+#Estaria pidiendo la conjunta
+# Y=0 Aceptador
+pY0=0.90
+pr0=0.30
+
+# Y=1 Rechazador
+pY1=0.10
+pr1=0.80
+
+
+palito<- c()
+# palito<-dbinom(0:8,8,pr0)*pY0+dbinom(0:8,8,pr1)*pY1
+# barplot(palito, names.arg=0:8, main=" Distribucion huevos rechazados")
+# palito
+# o bien
+for (i in 1:9) palito[i]<- dbinom(i-1,8,pr1)* pY1+ dbinom(i-1,8,pr0)*pY0
+barplot(palito,names.arg=0:8,main=" Distribucion huevos rechazados")
+```
+
+#### 7. 
+Haga la tabla de la funci´on de probabilidad conjunta del vector (X, Y ).
+```{r }
+#2.
+palito.Y0<- dbinom(0:8,8,pr0)
+
+#4.
+palito.Y1<- dbinom(0:8,8,pr1)
+
+#7.
+conjunta<- rbind(palito.Y0*pY0,palito.Y1*pY1)
+rownames(conjunta)<- c("0", "1") 
+colnames(conjunta)<- c("0", "1","2", "3","4", "5","6", "7","8") 
+
+
+# Redondeo
+tabla.conjunta<- round(conjunta,4)
+sum(tabla.conjunta[1,])
+sum(tabla.conjunta[2,])
+tabla.conjunta
+```
+
+
+
+
+### Algunos datos: 
+
+El archivo depredadosclasificadas.txt contiene mediciones correspondientes a nidos elegidos al azar en el bosque, registr´andose en cada uno de ellos el
+n´umero de huevos par´asitos removidos (primera columna) y la especie del hospedador (segunda columna), determinada mediante un an´alisis gen´etico. Tenemos entonces observaciones de (X, Y ) donde X indica la cantidad de huevos removidos del nido, mientras que Y = 0 si el hospedador es aceptador, Y = 1 indica que el hospedador es rechazador.
+
+#### 8. 
+Calcule la proporci´on de hospedadores aceptadores observados en la muestra. ¿Que probabilidad esta estimando esta proporcion?
+```{r }
+depredado<-read.csv("depredadosclasificadas.txt", header = TRUE, sep = " ")
+nrep<-length(depredado$removidos)
+length(which(depredado$especie==0))/nrep
+```
+
+#### 9. 
+Calcule la proporcion de nidos donde se removieron x = 5 huevos parasitos entre los hospedadores aceptadores. ¿Qu´e probabilidad est´a estimando esta proporci´on?
+```{r }
+union_acep_5<-length(which(depredado$especie==0 & depredado$removidos==5))
+aceptadores<-length(which(depredado$especie==0))
+union_acep_5/aceptadores
+```
+#### 10.
+Compare la funcion de probabilidad puntual condicional de X dado Y = 0 con la
+estimada, presentando ambas en un mismo grafico de barras.
+```{r }
+pajaritos<-read.table("depredadosclasificadas.txt",header=T)
+names(pajaritos)
+attach(pajaritos)
+mean(especie==0)
+
+# x removidos, y especie
+#9. Estima  P(X=5|Y=0)
+mean(removidos[especie==0]==5)
+
+estimada<- NULL
+for (i in 1:9) estimada[i]<-mean(removidos[especie==0]==i-1)
+
+palito.Y0<- drop(palito.Y0)
+lasdos<- rbind(estimada,palito.Y0)
+barplot(lasdos,names.arg=0:8,main=" ",beside=TRUE,legend=c("estimada","verdadera"),args.legend = list(x = "topright"))
+```
+
+#### 11. 
+Compare la funcion de probabilidad puntual condicional de X dado Y = 1 con la
+estimada, presentando ambas en un mismo gr´afico de barras.
+```{r }
+# x removidos, y especie
+tabla<-xtabs(~ especie+removidos) # tabla de contingencia 
+tabla
+
+estimada.cond.Y1<- tabla[2,]/sum(tabla[2,])
+
+lasdos.Y1<- rbind(estimada.cond.Y1,palito.Y1)
+barplot(lasdos.Y1,names.arg=0:8,main=" ",beside=TRUE,legend=c("estimada","verdadera"),args.legend = list(x = "topright"))
+```
+#### 12. 
+Hacer la tabla (con dos decimales) de las frecuencias relativas observadas de los pares (x, y), para 0 ≤ x ≤ 8, 0 ≤ y ≤ 1. Indique qu´e valores est´a estimando con esta tabla.
+```{r }
+tabla<-xtabs(~ especie+removidos)# tabla de contingencia 
+sum(tabla)
+tabla<- round(tabla/sum(tabla),2)
+tabla
+```
+
+
+# Parte B
+Clasificacion: Toy Example
+
+#### 13. 
+Considere la regla de clasificacion que determina que un nido corresponde a la especie rechazadora (Y = 1) si la cantidad de huevos removidos es mayor o igual a t = 5. Caso contrario, determina que el nido es de la especie hospedadora aceptadora (Y = 0).
+
+Implemente una funcion regla5 que dado x, el numero de huevos agredidos, devuelva el valor 1 si x >= 5, y devuelva el valor 0, caso contrario. Observe que la regla de clasificacion es una funcion g que para cada x determina un valor en {0, 1}.
+
+Calcule R5, la tasa de error empirica correspondiente a esta regla, utilizando los datos de depredadosclasificadas.txt. Es decir, calcule la proporcion de datos mal clasificados segun esta regla.
+
+```{r }
+datos <- read.csv('depredadosclasificadas.txt',sep="", header=T)
+
+regla5 <-function(x){
+    if(x >= 5){
+      return (1)
+    }
+  else{
+    return (0)
+  }
+}
+
+funcion_regla5 <-function(df){
+  nrep = dim(df)[1]
+  lista_clasif <-rep(0,nrep)
+  for (i in 1:nrep){
+    if (df$especie[i] != regla5(df$removidos[i])){
+       lista_clasif[i] = 1
+        }
+  }
+  lista_clasif
+}
+
+mean(funcion_regla5(datos))
+```
+
+#### 14. 
+Considere la regla de clasificacion que determina que un nido corresponde a la especie rechazadora (Y = 1) si la cantidad de huevos removidos es par.
+Caso contrario, determina que el nido es de un hospedador aceptador (Y = 0).
+
+Implemente una funcion rechazadorpar que dado x, el numero de huevos agredidos, devuelva el valor 1 si x es par, y devuelva el valor 0, caso contrario. Calcule la tasa de error empirica correspondiente a esta regla, utilizando los datos de depredadosclasificadas.txt. 
+Es decir, calcule la proporcion de datos mal clasificados segun esta regla.
+
+```{r }
+rechazarpar <-function(x){
+  ifelse(x%%2==0,1,0)
+}
+
+funcion_regla_par <-function(df){
+  nrep = dim(df)[1]
+  lista_clasif <-rep(0,nrep)
+  for (i in 1:nrep){ # rechazadora 1 si es par
+    if (df$especie[i] != rechazarpar(df$removidos[i])){ #1
+      lista_clasif[i] = 1
+    }
+  }
+  lista_clasif
+}
+
+mean(funcion_regla_par(datos))
+```
+
+#### 15.
+Cual de las reglas consideradas en los items anteriores (regla5 o rechazadorpar)
+prefiere? ?Por que?
+
+```{r }
+# No solo por la diferencia de criterio a nivel observador sino tambien en cuestion
+# del error cuadraticom medio empirico 
+mean(funcion_regla5(datos)) 
+mean(funcion_regla_par(datos))
+```
+
+#### 16. 
+Para cada t ??? {0, . . . , 8}, considere la regla de clasificacion que determina que un nido corresponde a la variedad rechazadora (Y = 1) si la cantidad de huevos removidos es mayor o igual a t. 
+Caso contrario, determina que el nido es del hospedador aceptador (Y = 0). Implemente una funci?on reglacorte que dados x y t, el n?umero de huevos removidos y el punto de corte, respectivamente, devuelva el valor 1 si x ??? t, y devuelva el valor 0, caso contrario.
+Calcule Rbt, la tasa de error emp?irica correspondiente a regla con punto de corte en t utilizando los datos depredadosclasificadas. Es decir, calcule la proporci?on de datos mal clasificados seg?un cada regla, para 0 ??? t ??? 8.
+```{r }
+reglacorte <-function(x,t){
+  ifelse(x>=t,1,0)
+}
+
+funcion_regla16 <-function(df,corte){
+  nrep = dim(df)[1]
+  lista_clasif <-rep(0,nrep)
+  for (i in 1:nrep){
+    if (df$especie[i] != reglacorte(df$removidos[i], corte)){
+      lista_clasif[i] = 1
+    }
+  }
+  lista_clasif
+}
+funcion16 <-function(df){
+  ecm <-rep(0,9)
+  for (i in 0:9){
+      ecm[i] = mean(funcion_regla16(datos,i))
+  }
+  ecm
+}
+
+
+
+funcion16(datos)
+
+library(ggplot2)
+df
+df <- data.frame(seq(0, 8, by=1),funcion16(datos))
+ggplot(df) +
+ aes(x = seq.0..8..by...1., y = funcion16.datos.) +
+ geom_point(shape = "circle", size = 4L, 
+ colour = "#FF8C00") +
+ geom_smooth(span = 0.71) +
+ labs(x = "X", y = "ECM") +
+ theme_gray()+
+ scale_x_continuous(breaks = seq(0, 8, 1))
+```
+17. ¿Con qu´e punto de corte obtiene la regla con menor error de clasificaci´on emp´ırico?
+
+#### 18. 
+Una regla de clasificacion g puede expresarse mediante una
+tira de ceros y unos que indica cuanto vale g para los diferentes valores de x. 
+
+Por ejemplo, la tira (0, 0, 0, 1, 1, 1, 0, 1, 1) indica que g(0) = 0, 
+g(1) = 0, g(2) = 0, g(3) = 1, g(4) = 1, etc. 
+
+Implemente la funcion ErrorClassTRUE que tenga por input un vector de ceros y unos y de longitud 9 y devuelva el error de clasificacion medio de la regla g, dado por P (g(X) 6 = Y ).
+```{r }
+py0 = 0.9
+pr0 = 0.3
+# aceptadora
+py1 = 0.1
+pr1 = 0.8 #prob de rechazar un huevo dado que soy acep
+ErrorClassTRUE <-function(regla){
+  # dbinom me da la prob de condicional si multuplico por marginal
+  # luego sumo cada momento en donde da mal 
+  errorclasstrue <- sum((regla=0)*dbinom(0:8,8,pr0)*py0)+ sum((regla=1)*dbinom(0:8,8,pr1)*py1)
+  errorclasstrue
+  }
+regla <- c(0, 0, 0, 1, 1, 1, 0, 1, 1)
+ErrorClassTRUE(regla)
+
+```
+
+#### 19. 
+Calcule el error de clasificaci´on medio correspondiente a la regla con punto de corte en t, para cada t ∈ {0, . . . , 8} 
+Recuerde que si g(X) es una regla de clasificaci´on, su error de clasificacion medio est´a dado por P(g(X) != Y ).
+
+Grafique el error de clasificaci´on medio como funci´on de t
+```{r}
+regla=rep(1,9)
+ErrorMedio= rep(0,9)
+
+for( i in 0:8){
+	regla[i]<-0
+	print(regla)
+	ErrorMedio[i+1]=ErrorClassTRUE(regla)
+}
+
+# ErrorMedio
+which.min(ErrorMedio)
+
+plot(0:8,ErrorMedio)
+```
+
+
+
+#### 20.
+```{r}
+rHuevosNido<- function(ene){
+	Y<- rbinom(ene,1,0.10)       # Aca sorteo el tipo de nido  
+	probas<-  pr1*Y+pr0*(1-Y)    # hago el vector de probas asociado al tipo de nido
+	X<- rbinom(ene,8,probas)     # genero la binomial de acuerdo al tipo de nido
+	salida<- cbind(X,Y)
+	salida
+}
+	
+rHuevosNido(10)
+```

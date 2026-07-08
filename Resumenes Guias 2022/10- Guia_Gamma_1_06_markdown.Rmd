@@ -1,0 +1,149 @@
+---
+title: "Guia TP 1/06  2 : Estimadores de Maxima Verosimilitud"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# PARTE 1
+
+1. Estimar P(X<=40)
+```{r , echo=TRUE}
+datos<-read.table("http://astrostatistics.psu.edu/datasets/GRB_afterglow.dat", header=T, skip=1)
+attach(datos)
+proba40<-sum(f<=40)/length(f) #0.666
+```
+
+2. Estimar a partir de los datos el flux medio.
+```{r , echo=TRUE}
+promedio<-mean(f) #34.4429
+```
+
+3. Estimar a partir de los datos la mediana de flux. ¿Usar´ıa para esto la estimacion obtenida en el ıtem anterior?
+```{r , echo=TRUE}
+meadiana<-median(f) #27.4
+```
+
+4. Estimar a partir de los datos la varianza de flux.
+```{r , echo=TRUE}
+varianza<-var(f) #868.87
+```
+
+5. Realizar un histograma para los datos flux. ¿Los datos parecen tener alguna distribucion conocida? Explorar el comando density.
+```{r , echo=TRUE}
+hist(f, probability = TRUE)
+```
+
+# PARTE 2
+
+## Estimacion bajo modelo exponencial
+
+Distribucion exponencial de parametro λ > 0, Xi ∼ E(λ). En tal caso, E(X) = 1/λ y V(X) = 1/λ2.
+
+Por lo tanto, la log–verosimilitud es:
+log L(λ; x) = n log(λ) − λ suma (i=1 a n) xi,
+de donde se deduce que el estimador de maxima verosimilitud est´a dado por λbn = 1/X¯n.
+
+Utilizando el modelo propuesto, el estimador de maxima verosimilitud obtenido y el metodo plug–in, es decir reemplazando el parametro por su valor estimado, resolver los siguientes items.
+
+6. Estimar por el metodo de Maxima Verosimilitud P(X ≤ 40). Comparar con la estimacion obtenida en la Seccion 1.
+```{r , echo=TRUE}
+lambda<-1/mean(f) #0.02903
+
+lambdas<-seq(0.001,1, length.out=500)
+nrep<-length(lambdas)
+vero_proba<-rep(NA,nrep)
+
+for (i in 1:nrep){
+  n<-length(f)
+  vero_proba[i]<-(n*log(lambdas[i]))-(lambdas[i]*sum(f))
+}
+
+plot(lambdas,vero_proba)
+lamba_exp_estimadovero<-lambdas[which.max(vero_proba)] #0.02902
+
+proba40vero<-1-exp(1)**(-lamba_exp_estimadovero*40) #0.6868
+```
+7. Realizar un histograma para los datos de flux y superponer la funcion de densidad exponencial con el par´ametro que considere pertinente.
+```{r , echo=TRUE}
+hist(f,probability = TRUE) 
+curve(dexp(x,rate = lamba_exp_estimadovero),add=TRUE)
+```
+8. Estimar por el metodo de Maxima Verosimilitud el flux medio a partir de los datos.
+```{r , echo=TRUE}
+promedio_expvero<-1/lamba_exp_estimadovero #34.4494
+```
+9. Si X ∼ E(λ), entonces su mediana resuelve la ecuacion 1−e**−λt = 0.5, y por consiguiente vale −log(0.5)/λ = log(2)/λ. Estimar por el metodo de M´axima Verosimilitud la mediana de flux.
+```{r , echo=TRUE}
+mediana_expvero<-log(2)/lamba_exp_estimadovero #23.8785
+```
+10. Estimar por el metodo de Maxima Verosimilitud la varianza de flux.
+```{r , echo=TRUE}
+varianza_expvero<-1/lamba_exp_estimadovero**2 #1186.76
+```
+
+# PARTE 3
+
+## Estimacion Bajo modelo Gamma
+
+En tal caso, E(X) = α/λ y V(X) = α/λ2. Los estimadores de los parametros α y λ que son faciles de computar son los obtenidos por un procedimiento conocido como Metodo de Momentos.
+
+En este caso, no hay formula cerrada para obtener los valores que maximizan esta expresion y se utilizan metodos numericos para la aproximacion de los mismos.
+
+1. Implementar una funcion MME.gamma que tenga por argumento un conjunto de datos x = (x1, . . . , xn) y devuelva los estimadores de momentos de α y λ.
+```{r , echo=TRUE}
+MME.gama<-function(datos_x){
+  n<-length(datos_x)
+  dif<-(datos_x-mean(datos_x))
+  dif<-dif**2
+  alfarulo<-(n*(mean(datos_x)**2))/sum(dif)
+  lambdarulo<-(n*mean(datos_x))/sum(dif)
+  parametros<-c(alfarulo,lambdarulo)
+  return(parametros)
+}
+```
+
+2. Suponiendo que los datos de flux provienen de una poblacion con distribucion Gamma, estimar α y λ usando la funcion MME.gamma
+```{r , echo=TRUE}
+alfarulo<-MME.gama(f)[1]   #1.3873  
+lambdarulo<-MME.gama(f)[2] #0.0402
+```
+
+3. Estimar P(X ≤ 40) usando las estimaciones obtenidas y el m´etodo plug–in, es decir reemplazando cada parametro por su valor estimado. Comparar con las estimaciones obtenidas en la Guıa de clase.
+```{r , echo=TRUE}
+proba40_gamma<-pgamma(40,shape = alfarulo, rate = lambdarulo) #0.6785
+```
+
+4. Realizar un histograma para los datos de flux y superponer la funcion de densidad gamma con los par´ametros que considere pertinentes.
+```{r , echo=TRUE}
+hist(f,probability = TRUE)
+curve(dgamma(x,rate = lambdarulo, shape = alfarulo),add=TRUE, col= 1, lwd = 2)
+```
+
+5. Bajo el mismo supuesto, calcular la estimacion por m´axima verosimilitud de α y λ. Explorar el comando fitdistr de la libreria MASS. Comparar con los valores obtenidos en ıtems anteriores.Repetir los tres ıtems anteriores y comparar los resultados obtenidos.
+```{r , echo=TRUE}
+#gamma<-fitdistr(datos$f, densfun= "gamma") 
+alfa_fit<-0.5493
+lambda_fit<-0.0159
+
+proba40_gamma_fit<-pgamma(40,shape = alfa_fit, rate = lambda_fit) #0.7126
+
+hist(f,probability = TRUE)
+curve(dgamma(x,rate = lambda_fit, shape = alfa_fit),add=TRUE, col= 1, lwd = 2)
+
+```
+
+6. Estimar por el metodo de Maxima Verosimilitud el flux medio a partir de los datos. ¿Con que valor podrıa comparar esta estimacion?
+```{r , echo=TRUE}
+media_gammavero<-alfa_fit/lambda_fit #34.5471
+```
+
+7. Estimar por el metodo plug–in la mediana de flux. Explorar el comando qgamma()).
+```{r , echo=TRUE}
+mediana_gamma<-qgamma(0.5,shape = alfa_fit, rate = lambda_fit) #17.0074
+```

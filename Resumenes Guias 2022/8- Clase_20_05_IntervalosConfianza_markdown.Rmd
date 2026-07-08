@@ -1,0 +1,159 @@
+---
+title: "Clase 20/5 Intervalos de confianza"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Intervalos de confianza
+
+Definicion: Diremos que (a(X1, . . . , Xn), b(X1, . . . , Xn)) es un intervalo de confinanza de nivel 1 − α para el par´ametro θ sii
+      
+            P (a(X1, . . . , Xn) < θ < b(X1, . . . , Xn)) = 1 − α .
+
+Los intervalos de confianza se construyen con la estimacion, el error de incertidumbre y la probabilidad con la que queres encerrar ese intervalo (factor de confianza).
+
+En términos simples, un intervalo de confianza del 95% indica que el valor poblacional se encuentra en un determinado rango de valores con un 95% de certeza.
+
+* El intervalo 0.95 es mas grande que intervalo 0.9 porque tengo mas probabilidad de encontrar al parametro poblacional.
+
+* Como regla general, mientras mayor es el tamaño de la muestra, menor es la variabilidad para hacer la estimación del intervalo, lo que lleva a estimadores más precisos.
+
+* Cuando nos dan un intervalo de confianza, por ejemplo, [-0.3,1.2] ya no hablamos mas de probabilidad sino de confianza y de si un valor se encuentra o no en el intervalo dado.
+
+### ¿Cómo interpretar el intervalo?
+
+Si una vez calculado el intervalo no es posible afirmar que existe una probabilidad de 1-α de que μ se encuentre en el intervalo, que debe decirse. La solución es simple, se reemplaza la palabra “probabilidad” por “confianza” y se dice que tenemos la confianza de que 1-α veces μ estará contenido entre los límites del intervalo.
+
+La amplitud del intervalo puede reducirse de la siguiente manera:
+
+1. Reducir el nivel de confianza
+La amplitud del nivel de confianza se reduce al aumentar el valor de α. Usualmente no se acepta un nivel de confianza inferior a un 90% (α=0,10); o sea, que sólo estamos dispuestos a errar en 10 de cada 100 intervalos que calculemos.
+
+2. Reducir σ
+La variabilidad de la población puede reducirse modificando la población de interés. Por ejemplo, si queremos estimar un intervalo de confianza para el diámetro medio de roble, podemos restringir la población de interés a aquellas áreas con bosques entre 1500 y 2000 m de elevación y en la zona de
+los Santos.
+
+3. Incrementar n
+El incrementar el tamaño de la muestra significa invertir más dinero y tiempo en la toma de datos. El intervalo de confianza decrece en función de la raíz cuadrada del tamaño de la muestra; por lo tanto para reducir la amplitud del intervalo en un 50% se requiere cuadruplicar el tamaño de la muestra.
+
+> Basados en el teorema del límite central sabemos que cuando “n” es suficientemente grande la distribución de la media será aproximadamente normal con media μ y varianza σ2/n, aún cuando las muestras provengan de una distribución no normal.
+
+```{r , echo=TRUE}
+
+#Bajamos 5 mediciones de shinny de lamparas con distribucion exp
+mediciones<-c(70.82,
+              68.34,
+              70.63,
+              67.58,
+              72.08)
+
+#Parametro de interes es u, estimador X raya
+estimacion<-mean(mediciones) #68.89
+
+#En el caso 1 la varianza es conocida
+sigma_cuad<-9
+error_incertidumbre<-sqrt(sigma_cuad/length(mediciones)) #1.3416
+
+#Queremos construir el intervalo de conf 0.95 para las mediciones obtenidas
+
+alfa<-0.05 #Area bajo la curva no contenida por el intervalo 
+factor<-qnorm(1-alfa/2) #1.9599
+
+#Construimos numero limite inferior del intervalo
+a<-estimacion-factor*error_incertidumbre #67.2604
+
+#Construimos numero limite superior del intervalo
+b<-estimacion+factor*error_incertidumbre #72.5195
+
+#Queremos saber si 70 pertenece o no al intervalo de confianza
+esta<-a<=70&70<=b #TRUE
+
+#Inventamos datos (5 mediciones) y hacemos este procedimiento Nrep=1000
+n<-5
+sigma_cuad<-9
+mu<-70
+nrep<-1000
+
+resultado_esta<-rep(NA,nrep)
+for (i in 1:nrep) {
+  
+  #Genero 5 datos exponenciales
+  misdatos<-rnorm(n,mu,sqrt(sigma_cuad))
+  
+  #Calculo el promedio de los mismos, la estimacion
+  estimacion<-mean(misdatos)
+  
+  #Calculo el error standard o de incertidumbre
+  error_incertidumbre<-sqrt(sigma_cuad/length(misdatos))
+  
+  #Genero intervalo de confianza
+  alfa<-0.05
+  factor<-qnorm(1-alfa/2)
+  a<-estimacion-factor*error_incertidumbre
+  b<-estimacion+factor*error_incertidumbre
+  
+  #Para cada replica, pregunto si esta o no el 70 dentro del int de conf
+  resultado_esta[i]<-a<=70&70<=b
+}
+
+mean(resultado_esta) #0.943
+#Entonces podemos decir que el 70 estara dentro del intervalo de confianza con una confianza del 95 porc
+
+#Ahora que nos inventamos datos, quiero hacer el juego de que no conozco la varianza. Entonces metemos como plugin la varianza que la estimamos como el desv estandar
+
+n<-5
+sigma_cuad<-9
+mu<-70
+nrep<-1000
+resultado_esta<-rep(NA,nrep)
+for (i in 1:nrep) {
+  
+  #Genero 5 datos exponenciales
+  misdatos<-rnorm(n,mu,sqrt(sigma_cuad))
+  
+  #Calculo el promedio de los mismos, la estimacion
+  estimacion<-mean(misdatos)
+  
+  #Calculo el error standard o de incertidumbre, no conozco varianza. Plug in
+  error_incertidumbre<-sd(misdatos)/sqrt(length(misdatos))
+  
+  #Genero intervalo de confianza
+  alfa<-0.05
+  factor<-qnorm(1-alfa/2)
+  a<-estimacion-factor*error_incertidumbre
+  b<-estimacion+factor*error_incertidumbre
+  resultado_esta[i]<-a<=70&70<=b
+}
+
+mean(resultado_esta) #0.875
+#ESTO DEJO DE SER NORMAL. TIENE DISTRIBUCION t n-1
+
+#Entonces hay que ajustar, el factor ya no se calcula como qnorm sino qt
+n<-5
+sigma_cuad<-9
+mu<-70
+nrep<-1000
+resultado_esta<-rep(NA,nrep)
+for (i in 1:nrep) {
+  misdatos<-rnorm(n,mu,sqrt(sigma_cuad))
+  estimacion<-mean(misdatos)
+  
+  #Calculo el error standard o de incertidumbre, no conozco varianza. Plug in
+  error_incertidumbre<-sd(misdatos)/sqrt(length(misdatos))
+  
+  #Genero intervalo de confianza
+  alfa<-0.05
+  factor<-qt(1-alfa/2,n-1) #Ajusto el factor con qt
+  a<-estimacion-factor*error_incertidumbre
+  b<-estimacion+factor*error_incertidumbre
+  resultado_esta[i]<-a<=70&70<=b
+}
+
+mean(resultado_esta) #0.952
+```
